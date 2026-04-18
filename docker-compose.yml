@@ -1,0 +1,67 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: parkease-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres          # ← Simple password for local dev
+      POSTGRES_DB: auth_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql   # uncomment only if you have this file
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  redis:
+    image: redis:7-alpine
+    container_name: parkease-redis
+    restart: unless-stopped
+    command: redis-server --requirepass redis123 --maxmemory 200mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: parkease-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq
+      RABBITMQ_DEFAULT_PASS: rabbitmq123
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    deploy:
+      resources:
+        limits:
+          memory: 384m
+
+  eureka-server:
+    image: eclipse-temurin:17-jre-alpine
+    container_name: parkease-eureka
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./eureka-server/target/eureka-server.jar:/app/eureka-server.jar
+    command: >
+      java -Xmx128m -Xms64m
+      -jar eureka-server.jar
+    ports:
+      - "8761:8761"
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+volumes:
+  postgres_data:
