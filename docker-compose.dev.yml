@@ -1,0 +1,135 @@
+version: '3.9'
+
+services:
+
+  auth-service:
+    image: eclipse-temurin:17-jre-alpine
+    container_name: parkease-auth
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./auth-service/target/auth-service.jar:/app/auth-service.jar
+    command: >
+      java -Xmx384m -Xms256m
+      -Dspring.main.lazy-initialization=true
+      -jar auth-service.jar
+    ports:
+      - "8081:8081"
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+      - eureka-server
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  parking-service:
+    image: eclipse-temurin:17-jre-alpine
+    container_name: parkease-parking
+    working_dir: /app
+    volumes:
+      - ./parking-service/target/parking-service.jar:/app/parking-service.jar
+    command: >
+      java -Xmx384m -Xms256m
+      -Dspring.main.lazy-initialization=true
+      -jar parking-service.jar
+    ports:
+      - "8082:8082"
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+      - eureka-server
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  booking-service:
+    image: eclipse-temurin:17-jre-alpine
+    container_name: parkease-booking
+    working_dir: /app
+    volumes:
+      - ./booking-service/target/booking-service.jar:/app/booking-service.jar
+    command: >
+      java -Xmx384m -Xms256m
+      -Dspring.main.lazy-initialization=true
+      -jar booking-service.jar
+    ports:
+      - "8083:8083"
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+      - eureka-server
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  payment-service:
+    image: eclipse-temurin:17-jre-alpine
+    container_name: parkease-payment
+    working_dir: /app
+    volumes:
+      - ./payment-service/target/payment-service.jar:/app/payment-service.jar
+    command: >
+      java -Xmx384m -Xms256m
+      -Dspring.main.lazy-initialization=true
+      -jar payment-service.jar
+    ports:
+      - "8084:8084"
+    env_file: .env
+    depends_on:
+      - postgres
+      - rabbitmq
+      - eureka-server
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  notification-service:
+    image: eclipse-temurin:17-jre-alpine
+    container_name: parkease-notification
+    working_dir: /app
+    volumes:
+      - ./notification-service/target/notification-service.jar:/app/notification-service.jar
+    command: >
+      java -Xmx256m -Xms128m
+      -Dspring.main.lazy-initialization=true
+      -jar notification-service.jar
+    ports:
+      - "8085:8085"
+    env_file: .env
+    depends_on:
+      - postgres
+      - rabbitmq
+      - eureka-server
+    deploy:
+      resources:
+        limits:
+          memory: 384m
+
+  api-gateway:
+    image: eclipse-temurin:17-jre-alpine
+    container_name: parkease-gateway
+    working_dir: /app
+    volumes:
+      - ./api-gateway/target/api-gateway.jar:/app/api-gateway.jar
+    command: >
+      java -Xmx256m -Xms128m
+      -Dspring.main.lazy-initialization=true
+      -jar api-gateway.jar
+    ports:
+      - "8080:8080"
+    env_file: .env
+    depends_on:
+      - eureka-server
+    deploy:
+      resources:
+        limits:
+          memory: 384m
