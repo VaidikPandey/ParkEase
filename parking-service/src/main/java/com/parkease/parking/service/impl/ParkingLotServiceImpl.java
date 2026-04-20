@@ -1,0 +1,181 @@
+package com.parkease.parking.service.impl;
+
+import com.parkease.parking.domain.entity.ParkingLot;
+import com.parkease.parking.domain.entity.ParkingSpot;
+import com.parkease.parking.repository.ParkingLotRepository;
+import com.parkease.parking.repository.ParkingSpotRepository;
+import com.parkease.parking.service.ParkingLotService;
+import com.parkease.parking.web.dto.request.CreateLotRequest;
+import com.parkease.parking.web.dto.request.UpdateLotRequest;
+import com.parkease.parking.web.dto.response.ParkingLotResponse;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+@Transactional
+public class ParkingLotServiceImpl implements ParkingLotService {
+
+    private final ParkingLotRepository lotRepository;
+    private final ParkingSpotRepository spotRepository;
+
+    @Override
+    public ParkingLotResponse createLot(Long managerId, CreateLotRequest request) {
+        ParkingLot lot = ParkingLot.builder()
+            .managerId(managerId)
+            .name(request.getName())
+            .address(request.getAddress())
+            .city(request.getCity())
+            .latitude(request.getLatitude())
+            .longitude(request.getLongitude())
+            .openingTime(request.getOpeningTime())
+            .closingTime(request.getClosingTime())
+            .imageUrl(request.getImageUrl())
+            .status(ParkingLot.LotStatus.PENDING)
+            .totalSpots(0)
+            .build();
+
+        lotRepository.save(lot);
+        log.info("New lot created by managerId={}: {}", managerId, lot.getName());
+        return ParkingLotResponse.from(lot, 0);
+    }
+
+    @Override
+    public ParkingLotResponse updateLot(Long lotId, Long managerId, UpdateLotRequest request) {
+        ParkingLot lot = findLotById(lotId);
+        validateManagerOwnership(lot, managerId);
+
+        if (request.getName() != null)        lot.setName(request.getName());
+        if (request.getAddress() != null)     lot.setAddress(request.getAddress());
+        if (request.getCity() != null)        lot.setCity(request.getCity());
+        if (request.getLatitude() != null)    lot.setLatitude(request.getLatitude());
+        if (request.getLongitude() != null)   lot.setLongitude(request.getLongitude());
+        if (request.getOpeningTime() != null) lot.setOpeningTime(request.getOpeningTime());
+        if (request.getClosingTime() != null) lot.setClosingTime(request.getClosingTime());
+        if (request.getImageUrl() != null)    lot.setImageUrl(request.getImageUrl());
+
+        int available = spotRepository.countByParkingLot_LotIdAndStatus(
+            lotId, ParkingSpot.SpotStatus.AVAILABLE
+        );
+        return ParkingLotResponse.from(lotRepository.save(lot), available);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ParkingLotResponse getLotById(Long lotId) {
+        ParkingLot lot = findLotById(lotId);
+        int available = spotRepository.countByParkingLot_LotIdAndStatus(
+            lotId, ParkingSpot.SpotStatus.AVAILABLE
+        );
+        return ParkingLotResponse.from(lot, available);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ParkingLotResponse> getLotsByManager(Long managerId) {
+        return lotRepository.findByManagerId(managerId)
+            .stream()
+            .map(lot -> {
+                int available = spotRepository.countByParkingLot_LotIdAndStatus(
+                    lot.getLotId(), ParkingSpot.SpotStatus.AVAILABLE
+                );
+                return ParkingLotResponse.from(lot, available);
+            })
+            .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ParkingLotResponse> getLotsByCity(String city) {
+        return lotRepository.findByCityAndStatus(city, ParkingLot.LotStatus.APPROVED)
+            .stream()
+            .map(lot -> {
+                int available = spotRepository.countByParkingLot_LotIdAndStatus(
+                    lot.getLotId(), ParkingSpot.SpotStatus.AVAILABLE
+                );
+                return ParkingLotResponse.from(lot, available);
+            })
+            .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ParkingLotResponse> getNearbyLots(double lat, double lng, double radiusKm) {
+        return lotRepository.findNearbyLots(lat, lng, radiusKm)
+            .stream()
+            .map(lot -> {
+                int available = spotRepository.countByParkingLot_LotIdAndStatus(
+                    lot.getLotId(), ParkingSpot.SpotStatus.AVAILABLE
+                );
+                return ParkingLotResponse.from(lot, available);
+            })
+            .toList();
+    }
+
+    @Override
+    public void toggleLotStatus(Long lotId, Long managerId) {
+        ParkingLot lot = findLotById(lotId);
+        validateManagerOwnership(lot, managerId);
+
+        if (lot.getStatus() == ParkingLot.LotStatus.APPROVED) {
+            lot.setStatus(ParkingLot.LotStatus.CLOSED);
+        } else if (lot.getStatus() == ParkingLot.LotStatus.CLOSED) {
+            lot.setStatus(ParkingLot.LotStatus.APPROVED);
+        } else {
+            throw new IllegalStateException("Cannot toggle a lot that is PENDING or REJECTED");
+        }
+
+        lotRepository.save(lot);
+        log.info("Lot {} status toggled to {}", lotId, lot.getStatus());
+    }
+
+    @Override
+    public void approveLot(Long lotId) {
+        ParkingLot lot = findLotById(lotId);
+        if (lot.getStatus() != ParkingLot.LotStatus.PENDING) {
+            throw new IllegalStateException("Only PENDING lots can be approved");
+        }
+        lot.setStatus(ParkingLot.LotStatus.APPROVED);
+        lotRepository.save(lot);
+        log.info("Lot {} approved", lotId);
+    }
+
+    @Override
+    public void rejectLot(Long lotId) {
+        ParkingLot lot = findLotById(lotId);
+        if (lot.getStatus() != ParkingLot.LotStatus.PENDING) {
+            throw new IllegalStateException("Only PENDING lots can be rejected");
+        }
+        lot.setStatus(ParkingLot.LotStatus.REJECTED);
+        lotRepository.save(lot);
+        log.info("Lot {} rejected", lotId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ParkingLotResponse> getPendingLots() {
+        return lotRepository.findByStatus(ParkingLot.LotStatus.PENDING)
+            .stream()
+            .map(lot -> ParkingLotResponse.from(lot, 0))
+            .toList();
+    }
+
+    // ── Private Helpers ───────────────────────────────────────────────────────
+
+    private ParkingLot findLotById(Long lotId) {
+        return lotRepository.findById(lotId)
+            .orElseThrow(() -> new EntityNotFoundException("Lot not found: id=" + lotId));
+    }
+
+    private void validateManagerOwnership(ParkingLot lot, Long managerId) {
+        if (!lot.getManagerId().equals(managerId)) {
+            throw new IllegalArgumentException("You do not own this parking lot");
+        }
+    }
+}
