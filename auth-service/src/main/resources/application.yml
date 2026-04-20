@@ -10,12 +10,11 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/auth_db
     username: postgres
-    password: postgres                     # must match docker-compose
-
-  hikari:
-    maximum-pool-size: 5
-    minimum-idle: 2
-    connection-timeout: 20000
+    password: postgres
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout: 20000
 
   jpa:
     hibernate:
@@ -24,27 +23,27 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        # dialect is auto-detected, no need to specify
 
   data:
     redis:
       host: localhost
       port: 6379
-      password: redis123                    # must match the one in docker-compose
+      password: redis123
 
-#  # Disable Google OAuth for now (you can enable later)
-#  security:
-#    oauth2:
-#      client:
-#        registration:
-#          google:
-#            client-id: ""
-#            client-secret: ""
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope: email, profile
+            redirect-uri: "{baseUrl}/oauth2/callback/{registrationId}"
 
 jwt:
   secret: MySuperLongJwtSecretKeyForLocalDevelopmentOnly2026MakeItAtLeast64CharsLong!
-  expiry-ms: 86400000          # 24 hours
-  refresh-expiry-ms: 604800000 # 7 days
+  expiry-ms: 86400000
+  refresh-expiry-ms: 604800000
 
 eureka:
   client:
