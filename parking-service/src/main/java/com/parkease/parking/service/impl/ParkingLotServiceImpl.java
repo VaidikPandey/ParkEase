@@ -4,6 +4,7 @@ import com.parkease.parking.domain.entity.ParkingLot;
 import com.parkease.parking.domain.entity.ParkingSpot;
 import com.parkease.parking.repository.ParkingLotRepository;
 import com.parkease.parking.repository.ParkingSpotRepository;
+import com.parkease.parking.service.AvailabilityCounterService;
 import com.parkease.parking.service.ParkingLotService;
 import com.parkease.parking.web.dto.request.CreateLotRequest;
 import com.parkease.parking.web.dto.request.UpdateLotRequest;
@@ -24,24 +25,29 @@ public class ParkingLotServiceImpl implements ParkingLotService {
 
     private final ParkingLotRepository lotRepository;
     private final ParkingSpotRepository spotRepository;
+    private final AvailabilityCounterService counterService;
 
     @Override
     public ParkingLotResponse createLot(Long managerId, CreateLotRequest request) {
         ParkingLot lot = ParkingLot.builder()
-            .managerId(managerId)
-            .name(request.getName())
-            .address(request.getAddress())
-            .city(request.getCity())
-            .latitude(request.getLatitude())
-            .longitude(request.getLongitude())
-            .openingTime(request.getOpeningTime())
-            .closingTime(request.getClosingTime())
-            .imageUrl(request.getImageUrl())
-            .status(ParkingLot.LotStatus.PENDING)
-            .totalSpots(0)
-            .build();
+                .managerId(managerId)
+                .name(request.getName())
+                .address(request.getAddress())
+                .city(request.getCity())
+                .latitude(request.getLatitude())
+                .longitude(request.getLongitude())
+                .openingTime(request.getOpeningTime())
+                .closingTime(request.getClosingTime())
+                .imageUrl(request.getImageUrl())
+                .status(ParkingLot.LotStatus.PENDING)
+                .totalSpots(0)
+                .build();
 
         lotRepository.save(lot);
+
+        // init Redis counter at 0 — lot has no spots yet
+        counterService.initCounter(lot.getLotId(), 0);
+
         log.info("New lot created by managerId={}: {}", managerId, lot.getName());
         return ParkingLotResponse.from(lot, 0);
     }
@@ -60,9 +66,7 @@ public class ParkingLotServiceImpl implements ParkingLotService {
         if (request.getClosingTime() != null) lot.setClosingTime(request.getClosingTime());
         if (request.getImageUrl() != null)    lot.setImageUrl(request.getImageUrl());
 
-        int available = spotRepository.countByParkingLot_LotIdAndStatus(
-            lotId, ParkingSpot.SpotStatus.AVAILABLE
-        );
+        int available = counterService.getAvailableCount(lotId);
         return ParkingLotResponse.from(lotRepository.save(lot), available);
     }
 
@@ -70,9 +74,8 @@ public class ParkingLotServiceImpl implements ParkingLotService {
     @Transactional(readOnly = true)
     public ParkingLotResponse getLotById(Long lotId) {
         ParkingLot lot = findLotById(lotId);
-        int available = spotRepository.countByParkingLot_LotIdAndStatus(
-            lotId, ParkingSpot.SpotStatus.AVAILABLE
-        );
+        // read from Redis instead of DB
+        int available = counterService.getAvailableCount(lotId);
         return ParkingLotResponse.from(lot, available);
     }
 
@@ -80,42 +83,36 @@ public class ParkingLotServiceImpl implements ParkingLotService {
     @Transactional(readOnly = true)
     public List<ParkingLotResponse> getLotsByManager(Long managerId) {
         return lotRepository.findByManagerId(managerId)
-            .stream()
-            .map(lot -> {
-                int available = spotRepository.countByParkingLot_LotIdAndStatus(
-                    lot.getLotId(), ParkingSpot.SpotStatus.AVAILABLE
-                );
-                return ParkingLotResponse.from(lot, available);
-            })
-            .toList();
+                .stream()
+                .map(lot -> {
+                    int available = counterService.getAvailableCount(lot.getLotId());
+                    return ParkingLotResponse.from(lot, available);
+                })
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ParkingLotResponse> getLotsByCity(String city) {
         return lotRepository.findByCityAndStatus(city, ParkingLot.LotStatus.APPROVED)
-            .stream()
-            .map(lot -> {
-                int available = spotRepository.countByParkingLot_LotIdAndStatus(
-                    lot.getLotId(), ParkingSpot.SpotStatus.AVAILABLE
-                );
-                return ParkingLotResponse.from(lot, available);
-            })
-            .toList();
+                .stream()
+                .map(lot -> {
+                    int available = counterService.getAvailableCount(lot.getLotId());
+                    return ParkingLotResponse.from(lot, available);
+                })
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ParkingLotResponse> getNearbyLots(double lat, double lng, double radiusKm) {
         return lotRepository.findNearbyLots(lat, lng, radiusKm)
-            .stream()
-            .map(lot -> {
-                int available = spotRepository.countByParkingLot_LotIdAndStatus(
-                    lot.getLotId(), ParkingSpot.SpotStatus.AVAILABLE
-                );
-                return ParkingLotResponse.from(lot, available);
-            })
-            .toList();
+                .stream()
+                .map(lot -> {
+                    int available = counterService.getAvailableCount(lot.getLotId());
+                    return ParkingLotResponse.from(lot, available);
+                })
+                .toList();
     }
 
     @Override
@@ -143,7 +140,14 @@ public class ParkingLotServiceImpl implements ParkingLotService {
         }
         lot.setStatus(ParkingLot.LotStatus.APPROVED);
         lotRepository.save(lot);
-        log.info("Lot {} approved", lotId);
+
+        // sync Redis counter with actual DB count on approval
+        int available = spotRepository.countByParkingLot_LotIdAndStatus(
+                lotId, ParkingSpot.SpotStatus.AVAILABLE
+        );
+        counterService.initCounter(lotId, available);
+
+        log.info("Lot {} approved, Redis counter synced to {}", lotId, available);
     }
 
     @Override
@@ -154,23 +158,27 @@ public class ParkingLotServiceImpl implements ParkingLotService {
         }
         lot.setStatus(ParkingLot.LotStatus.REJECTED);
         lotRepository.save(lot);
-        log.info("Lot {} rejected", lotId);
+
+        // clean up Redis counter
+        counterService.deleteCounter(lotId);
+
+        log.info("Lot {} rejected, Redis counter deleted", lotId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ParkingLotResponse> getPendingLots() {
         return lotRepository.findByStatus(ParkingLot.LotStatus.PENDING)
-            .stream()
-            .map(lot -> ParkingLotResponse.from(lot, 0))
-            .toList();
+                .stream()
+                .map(lot -> ParkingLotResponse.from(lot, 0))
+                .toList();
     }
 
-    // ── Private Helpers ───────────────────────────────────────────────────────
+    // ── Private Helpers
 
     private ParkingLot findLotById(Long lotId) {
         return lotRepository.findById(lotId)
-            .orElseThrow(() -> new EntityNotFoundException("Lot not found: id=" + lotId));
+                .orElseThrow(() -> new EntityNotFoundException("Lot not found: id=" + lotId));
     }
 
     private void validateManagerOwnership(ParkingLot lot, Long managerId) {

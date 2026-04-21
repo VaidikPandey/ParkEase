@@ -32,7 +32,7 @@ public class ParkingSpotResource {
     private final ParkingSpotService spotService;
     private final JwtUtil jwtUtil;
 
-    // ── Public ────────────────────────────────────────────────────────────────
+    // ── Public
 
     @GetMapping("/lots/{lotId}/spots")
     @Operation(summary = "Get all spots for a lot — public")
@@ -68,7 +68,7 @@ public class ParkingSpotResource {
         return ResponseEntity.ok(spotService.getSpotById(spotId));
     }
 
-    // ── Manager ───────────────────────────────────────────────────────────────
+    // ── Manager
 
     @PostMapping("/manager/lots/{lotId}/spots")
     @PreAuthorize("hasRole('MANAGER')")
@@ -134,7 +134,7 @@ public class ParkingSpotResource {
         return ResponseEntity.noContent().build();
     }
 
-    // ── Helper ────────────────────────────────────────────────────────────────
+    // ── Helper
 
     private Long extractUserId(String authHeader) {
         return jwtUtil.extractUserId(authHeader.substring(7));

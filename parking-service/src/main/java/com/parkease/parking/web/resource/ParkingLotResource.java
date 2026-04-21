@@ -1,6 +1,7 @@
 package com.parkease.parking.web.resource;
 
 import com.parkease.parking.security.JwtUtil;
+import com.parkease.parking.service.AvailabilityCounterService;
 import com.parkease.parking.service.ParkingLotService;
 import com.parkease.parking.web.dto.request.CreateLotRequest;
 import com.parkease.parking.web.dto.request.UpdateLotRequest;
@@ -20,6 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/parking")
@@ -29,13 +31,14 @@ public class ParkingLotResource {
 
     private final ParkingLotService lotService;
     private final JwtUtil jwtUtil;
+    private final AvailabilityCounterService counterService;
 
-    // ── Public ────────────────────────────────────────────────────────────────
+    // ── Public
 
     @GetMapping("/lots/search")
     @Operation(summary = "Search approved lots by city — public")
     public ResponseEntity<List<ParkingLotResponse>> searchByCity(
-        @RequestParam String city
+            @RequestParam String city
     ) {
         return ResponseEntity.ok(lotService.getLotsByCity(city));
     }
@@ -43,9 +46,9 @@ public class ParkingLotResource {
     @GetMapping("/lots/nearby")
     @Operation(summary = "Find nearby lots by GPS coordinates — public")
     public ResponseEntity<List<ParkingLotResponse>> nearby(
-        @RequestParam double lat,
-        @RequestParam double lng,
-        @RequestParam(defaultValue = "5.0") double radius
+            @RequestParam double lat,
+            @RequestParam double lng,
+            @RequestParam(defaultValue = "5.0") double radius
     ) {
         return ResponseEntity.ok(lotService.getNearbyLots(lat, lng, radius));
     }
@@ -53,42 +56,54 @@ public class ParkingLotResource {
     @GetMapping("/lots/{id}")
     @Operation(summary = "Get lot details by ID — public")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Lot found"),
-        @ApiResponse(responseCode = "404", description = "Lot not found",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "200", description = "Lot found"),
+            @ApiResponse(responseCode = "404", description = "Lot not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<ParkingLotResponse> getLotById(@PathVariable Long id) {
         return ResponseEntity.ok(lotService.getLotById(id));
     }
 
-    // ── Manager ───────────────────────────────────────────────────────────────
+    @GetMapping("/lots/{id}/availability")
+    @Operation(summary = "Get real-time available spot count from Redis — public")
+    public ResponseEntity<Map<String, Object>> getAvailability(@PathVariable Long id) {
+        int count = counterService.getAvailableCount(id);
+        boolean available = counterService.isAvailable(id);
+        return ResponseEntity.ok(Map.of(
+                "lotId", id,
+                "availableSpots", count,
+                "isAvailable", available
+        ));
+    }
+
+    // ── Manager
 
     @PostMapping("/manager/lots")
     @PreAuthorize("hasRole('MANAGER')")
     @Operation(summary = "Create a new parking lot — MANAGER only",
-        security = @SecurityRequirement(name = "bearerAuth"))
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Lot created, status PENDING"),
-        @ApiResponse(responseCode = "400", description = "Validation error",
-            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "201", description = "Lot created, status PENDING"),
+            @ApiResponse(responseCode = "400", description = "Validation error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<ParkingLotResponse> createLot(
-        @RequestHeader("Authorization") String authHeader,
-        @Valid @RequestBody CreateLotRequest request
+            @RequestHeader("Authorization") String authHeader,
+            @Valid @RequestBody CreateLotRequest request
     ) {
         Long managerId = extractUserId(authHeader);
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(lotService.createLot(managerId, request));
+                .body(lotService.createLot(managerId, request));
     }
 
     @PutMapping("/manager/lots/{id}")
     @PreAuthorize("hasRole('MANAGER')")
     @Operation(summary = "Update lot details — MANAGER only",
-        security = @SecurityRequirement(name = "bearerAuth"))
+            security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<ParkingLotResponse> updateLot(
-        @RequestHeader("Authorization") String authHeader,
-        @PathVariable Long id,
-        @RequestBody UpdateLotRequest request
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Long id,
+            @RequestBody UpdateLotRequest request
     ) {
         Long managerId = extractUserId(authHeader);
         return ResponseEntity.ok(lotService.updateLot(id, managerId, request));
@@ -97,10 +112,10 @@ public class ParkingLotResource {
     @PutMapping("/manager/lots/{id}/toggle")
     @PreAuthorize("hasRole('MANAGER')")
     @Operation(summary = "Toggle lot open/closed — MANAGER only",
-        security = @SecurityRequirement(name = "bearerAuth"))
+            security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Void> toggleStatus(
-        @RequestHeader("Authorization") String authHeader,
-        @PathVariable Long id
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Long id
     ) {
         Long managerId = extractUserId(authHeader);
         lotService.toggleLotStatus(id, managerId);
@@ -110,20 +125,20 @@ public class ParkingLotResource {
     @GetMapping("/manager/lots")
     @PreAuthorize("hasRole('MANAGER')")
     @Operation(summary = "Get all lots owned by current manager",
-        security = @SecurityRequirement(name = "bearerAuth"))
+            security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<ParkingLotResponse>> getMyLots(
-        @RequestHeader("Authorization") String authHeader
+            @RequestHeader("Authorization") String authHeader
     ) {
         Long managerId = extractUserId(authHeader);
         return ResponseEntity.ok(lotService.getLotsByManager(managerId));
     }
 
-    // ── Admin ─────────────────────────────────────────────────────────────────
+    // ── Admin
 
     @GetMapping("/admin/lots/pending")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all pending lot registrations — ADMIN only",
-        security = @SecurityRequirement(name = "bearerAuth"))
+            security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<ParkingLotResponse>> getPendingLots() {
         return ResponseEntity.ok(lotService.getPendingLots());
     }
@@ -131,7 +146,7 @@ public class ParkingLotResource {
     @PutMapping("/admin/lots/{id}/approve")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Approve a lot registration — ADMIN only",
-        security = @SecurityRequirement(name = "bearerAuth"))
+            security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Void> approveLot(@PathVariable Long id) {
         lotService.approveLot(id);
         return ResponseEntity.noContent().build();
@@ -140,13 +155,13 @@ public class ParkingLotResource {
     @PutMapping("/admin/lots/{id}/reject")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Reject a lot registration — ADMIN only",
-        security = @SecurityRequirement(name = "bearerAuth"))
+            security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Void> rejectLot(@PathVariable Long id) {
         lotService.rejectLot(id);
         return ResponseEntity.noContent().build();
     }
 
-    // ── Helper ────────────────────────────────────────────────────────────────
+    // ── Helper
 
     private Long extractUserId(String authHeader) {
         return jwtUtil.extractUserId(authHeader.substring(7));
