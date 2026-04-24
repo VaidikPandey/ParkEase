@@ -36,6 +36,12 @@
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
 
+        <!-- Load Balancer (required for lb:// scheme in gateway routes) -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+        </dependency>
+
         <!-- JWT validation -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
