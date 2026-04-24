@@ -47,7 +47,7 @@ public class NotificationResource {
     @Operation(summary = "Get all notifications for a recipient (paginated)")
     public ResponseEntity<Page<NotificationResponse>> getByRecipient(
             @PathVariable Long recipientId,
-            @RequestAttribute("userId") Long callerId,
+            @RequestHeader("X-User-Id") Long callerId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             Authentication auth) {
@@ -60,7 +60,7 @@ public class NotificationResource {
     @Operation(summary = "Get unread notifications for a recipient (paginated)")
     public ResponseEntity<Page<NotificationResponse>> getUnread(
             @PathVariable Long recipientId,
-            @RequestAttribute("userId") Long callerId,
+            @RequestHeader("X-User-Id") Long callerId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             Authentication auth) {
@@ -73,7 +73,7 @@ public class NotificationResource {
     @Operation(summary = "Get unread notification count")
     public ResponseEntity<Map<String, Long>> getUnreadCount(
             @PathVariable Long recipientId,
-            @RequestAttribute("userId") Long callerId,
+            @RequestHeader("X-User-Id") Long callerId,
             Authentication auth) {
         enforceOwnership(callerId, recipientId, auth);
         return ResponseEntity.ok(Map.of("unreadCount", notificationService.getUnreadCount(recipientId)));
@@ -83,7 +83,7 @@ public class NotificationResource {
     @Operation(summary = "Mark a notification as read")
     public ResponseEntity<Void> markAsRead(
             @PathVariable Long notificationId,
-            @RequestAttribute("userId") Long callerId,
+            @RequestHeader("X-User-Id") Long callerId,
             Authentication auth) {
         boolean isAdmin = hasRole(auth, "ADMIN");
         notificationService.markAsRead(notificationId, callerId, isAdmin);
@@ -94,7 +94,7 @@ public class NotificationResource {
     @Operation(summary = "Mark all notifications as read for a recipient")
     public ResponseEntity<Void> markAllRead(
             @PathVariable Long recipientId,
-            @RequestAttribute("userId") Long callerId,
+            @RequestHeader("X-User-Id") Long callerId,
             Authentication auth) {
         enforceOwnership(callerId, recipientId, auth);
         notificationService.markAllRead(recipientId);
@@ -105,7 +105,7 @@ public class NotificationResource {
     @Operation(summary = "Delete a notification")
     public ResponseEntity<Void> delete(
             @PathVariable Long notificationId,
-            @RequestAttribute("userId") Long callerId,
+            @RequestHeader("X-User-Id") Long callerId,
             Authentication auth) {
         boolean isAdmin = hasRole(auth, "ADMIN");
         notificationService.deleteNotification(notificationId, callerId, isAdmin);
