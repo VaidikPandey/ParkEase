@@ -396,6 +396,7 @@ public class BookingServiceImpl implements BookingService {
                     .driverEmail(driverEmail)
                     .vehiclePlate(booking.getVehiclePlate())
                     .eventType(routingKey)
+                    .bookingType(booking.getBookingType() != null ? booking.getBookingType().name() : null)
                     .startTime(booking.getStartTime())
                     .endTime(booking.getEndTime())
                     .checkInTime(booking.getCheckInTime())
