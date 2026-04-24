@@ -60,6 +60,12 @@
       <artifactId>spring-boot-starter-data-redis</artifactId>
     </dependency>
 
+    <!-- RabbitMQ — consume booking events for spot status sync -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-amqp</artifactId>
+    </dependency>
+
     <!-- Redisson distributed locks -->
     <dependency>
       <groupId>org.redisson</groupId>
