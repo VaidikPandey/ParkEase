@@ -35,9 +35,6 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PaymentResponse processPayment(PaymentRequest request, Long callerId, boolean isAdmin) {
-        if (!isAdmin && !request.getUserId().equals(callerId)) {
-            throw new AccessDeniedException("You can only pay for your own bookings");
-        }
         paymentRepository.findByBookingId(request.getBookingId())
                 .filter(p -> p.getStatus() == Payment.PaymentStatus.PAID)
                 .ifPresent(p -> {
@@ -48,7 +45,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment payment = Payment.builder()
                 .bookingId(request.getBookingId())
-                .userId(request.getUserId())
+                .userId(callerId)
                 .lotId(request.getLotId())
                 .amount(request.getAmount())
                 .mode(request.getMode())

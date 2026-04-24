@@ -1,6 +1,5 @@
 package com.parkease.parking.web.resource;
 
-import com.parkease.parking.security.JwtUtil;
 import com.parkease.parking.service.AvailabilityCounterService;
 import com.parkease.parking.service.ParkingLotService;
 import com.parkease.parking.web.dto.request.CreateLotRequest;
@@ -30,7 +29,6 @@ import java.util.Map;
 public class ParkingLotResource {
 
     private final ParkingLotService lotService;
-    private final JwtUtil jwtUtil;
     private final AvailabilityCounterService counterService;
 
     // ── Public
@@ -88,10 +86,9 @@ public class ParkingLotResource {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<ParkingLotResponse> createLot(
-            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-User-Id") Long managerId,
             @Valid @RequestBody CreateLotRequest request
     ) {
-        Long managerId = extractUserId(authHeader);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(lotService.createLot(managerId, request));
     }
@@ -101,11 +98,10 @@ public class ParkingLotResource {
     @Operation(summary = "Update lot details — MANAGER only",
             security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<ParkingLotResponse> updateLot(
-            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-User-Id") Long managerId,
             @PathVariable Long id,
             @RequestBody UpdateLotRequest request
     ) {
-        Long managerId = extractUserId(authHeader);
         return ResponseEntity.ok(lotService.updateLot(id, managerId, request));
     }
 
@@ -114,10 +110,9 @@ public class ParkingLotResource {
     @Operation(summary = "Toggle lot open/closed — MANAGER only",
             security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Void> toggleStatus(
-            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-User-Id") Long managerId,
             @PathVariable Long id
     ) {
-        Long managerId = extractUserId(authHeader);
         lotService.toggleLotStatus(id, managerId);
         return ResponseEntity.noContent().build();
     }
@@ -127,9 +122,8 @@ public class ParkingLotResource {
     @Operation(summary = "Get all lots owned by current manager",
             security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<ParkingLotResponse>> getMyLots(
-            @RequestHeader("Authorization") String authHeader
+            @RequestHeader("X-User-Id") Long managerId
     ) {
-        Long managerId = extractUserId(authHeader);
         return ResponseEntity.ok(lotService.getLotsByManager(managerId));
     }
 
@@ -161,9 +155,4 @@ public class ParkingLotResource {
         return ResponseEntity.noContent().build();
     }
 
-    // ── Helper
-
-    private Long extractUserId(String authHeader) {
-        return jwtUtil.extractUserId(authHeader.substring(7));
-    }
 }

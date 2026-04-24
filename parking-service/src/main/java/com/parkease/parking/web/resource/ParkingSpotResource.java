@@ -1,7 +1,6 @@
 package com.parkease.parking.web.resource;
 
 import com.parkease.parking.domain.entity.ParkingSpot;
-import com.parkease.parking.security.JwtUtil;
 import com.parkease.parking.service.ParkingSpotService;
 import com.parkease.parking.web.dto.request.BulkCreateSpotRequest;
 import com.parkease.parking.web.dto.request.CreateSpotRequest;
@@ -30,7 +29,6 @@ import java.util.List;
 public class ParkingSpotResource {
 
     private final ParkingSpotService spotService;
-    private final JwtUtil jwtUtil;
 
     // ── Public
 
@@ -42,18 +40,15 @@ public class ParkingSpotResource {
 
     @GetMapping("/lots/{lotId}/spots/available")
     @Operation(summary = "Get available spots for a lot — public")
-    public ResponseEntity<List<ParkingSpotResponse>> getAvailableSpots(
-        @PathVariable Long lotId
-    ) {
+    public ResponseEntity<List<ParkingSpotResponse>> getAvailableSpots(@PathVariable Long lotId) {
         return ResponseEntity.ok(spotService.getAvailableSpots(lotId));
     }
 
     @GetMapping("/lots/{lotId}/spots/type/{type}")
     @Operation(summary = "Filter spots by type — public")
     public ResponseEntity<List<ParkingSpotResponse>> getByType(
-        @PathVariable Long lotId,
-        @PathVariable ParkingSpot.SpotType type
-    ) {
+            @PathVariable Long lotId,
+            @PathVariable ParkingSpot.SpotType type) {
         return ResponseEntity.ok(spotService.getSpotsByType(lotId, type));
     }
 
@@ -80,13 +75,11 @@ public class ParkingSpotResource {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<ParkingSpotResponse> addSpot(
-        @RequestHeader("Authorization") String authHeader,
-        @PathVariable Long lotId,
-        @Valid @RequestBody CreateSpotRequest request
-    ) {
-        Long managerId = extractUserId(authHeader);
+            @RequestHeader("X-User-Id") Long managerId,
+            @PathVariable Long lotId,
+            @Valid @RequestBody CreateSpotRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(spotService.addSpot(lotId, managerId, request));
+                .body(spotService.addSpot(lotId, managerId, request));
     }
 
     @PostMapping("/manager/lots/{lotId}/spots/bulk")
@@ -94,13 +87,11 @@ public class ParkingSpotResource {
     @Operation(summary = "Bulk add spots to a lot — MANAGER only",
         security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<ParkingSpotResponse>> bulkAddSpots(
-        @RequestHeader("Authorization") String authHeader,
-        @PathVariable Long lotId,
-        @Valid @RequestBody BulkCreateSpotRequest request
-    ) {
-        Long managerId = extractUserId(authHeader);
+            @RequestHeader("X-User-Id") Long managerId,
+            @PathVariable Long lotId,
+            @Valid @RequestBody BulkCreateSpotRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(spotService.bulkAddSpots(lotId, managerId, request));
+                .body(spotService.bulkAddSpots(lotId, managerId, request));
     }
 
     @PutMapping("/manager/spots/{spotId}")
@@ -108,11 +99,9 @@ public class ParkingSpotResource {
     @Operation(summary = "Update spot details — MANAGER only",
         security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<ParkingSpotResponse> updateSpot(
-        @RequestHeader("Authorization") String authHeader,
-        @PathVariable Long spotId,
-        @RequestBody UpdateSpotRequest request
-    ) {
-        Long managerId = extractUserId(authHeader);
+            @RequestHeader("X-User-Id") Long managerId,
+            @PathVariable Long spotId,
+            @RequestBody UpdateSpotRequest request) {
         return ResponseEntity.ok(spotService.updateSpot(spotId, managerId, request));
     }
 
@@ -126,17 +115,9 @@ public class ParkingSpotResource {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<Void> deleteSpot(
-        @RequestHeader("Authorization") String authHeader,
-        @PathVariable Long spotId
-    ) {
-        Long managerId = extractUserId(authHeader);
+            @RequestHeader("X-User-Id") Long managerId,
+            @PathVariable Long spotId) {
         spotService.deleteSpot(spotId, managerId);
         return ResponseEntity.noContent().build();
-    }
-
-    // ── Helper
-
-    private Long extractUserId(String authHeader) {
-        return jwtUtil.extractUserId(authHeader.substring(7));
     }
 }

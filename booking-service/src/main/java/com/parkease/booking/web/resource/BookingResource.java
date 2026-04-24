@@ -1,6 +1,5 @@
 package com.parkease.booking.web.resource;
 
-import com.parkease.booking.security.JwtUtil;
 import com.parkease.booking.service.BookingService;
 import com.parkease.booking.web.dto.request.*;
 import com.parkease.booking.web.dto.response.BookingResponse;
@@ -27,9 +26,6 @@ import java.util.List;
 public class BookingResource {
 
     private final BookingService bookingService;
-    private final JwtUtil jwtUtil;
-
-    // ── Create Booking
 
     @PostMapping
     @PreAuthorize("hasRole('DRIVER')")
@@ -43,15 +39,11 @@ public class BookingResource {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<BookingResponse> createBooking(
-            @RequestHeader("Authorization") String authHeader,
-            @Valid @RequestBody CreateBookingRequest request
-    ) {
-        Long driverId = extractUserId(authHeader);
+            @RequestHeader("X-User-Id") Long driverId,
+            @Valid @RequestBody CreateBookingRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(bookingService.createBooking(driverId, request));
     }
-
-    // ── Check In
 
     @PutMapping("/{bookingId}/checkin")
     @PreAuthorize("hasRole('DRIVER')")
@@ -65,14 +57,10 @@ public class BookingResource {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<BookingResponse> checkIn(
-            @RequestHeader("Authorization") String authHeader,
-            @PathVariable Long bookingId
-    ) {
-        Long driverId = extractUserId(authHeader);
+            @RequestHeader("X-User-Id") Long driverId,
+            @PathVariable Long bookingId) {
         return ResponseEntity.ok(bookingService.checkIn(bookingId, driverId));
     }
-
-    // ── Check Out
 
     @PutMapping("/{bookingId}/checkout")
     @PreAuthorize("hasRole('DRIVER')")
@@ -86,14 +74,10 @@ public class BookingResource {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<BookingResponse> checkOut(
-            @RequestHeader("Authorization") String authHeader,
-            @PathVariable Long bookingId
-    ) {
-        Long driverId = extractUserId(authHeader);
+            @RequestHeader("X-User-Id") Long driverId,
+            @PathVariable Long bookingId) {
         return ResponseEntity.ok(bookingService.checkOut(bookingId, driverId));
     }
-
-    // ── Cancel Booking
 
     @PutMapping("/{bookingId}/cancel")
     @PreAuthorize("hasRole('DRIVER')")
@@ -107,15 +91,11 @@ public class BookingResource {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<BookingResponse> cancelBooking(
-            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-User-Id") Long driverId,
             @PathVariable Long bookingId,
-            @Valid @RequestBody CancelBookingRequest request
-    ) {
-        Long driverId = extractUserId(authHeader);
+            @Valid @RequestBody CancelBookingRequest request) {
         return ResponseEntity.ok(bookingService.cancelBooking(bookingId, driverId, request));
     }
-
-    // ── Extend Booking
 
     @PutMapping("/{bookingId}/extend")
     @PreAuthorize("hasRole('DRIVER')")
@@ -129,53 +109,37 @@ public class BookingResource {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<BookingResponse> extendBooking(
-            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader("X-User-Id") Long driverId,
             @PathVariable Long bookingId,
-            @Valid @RequestBody ExtendBookingRequest request
-    ) {
-        Long driverId = extractUserId(authHeader);
+            @Valid @RequestBody ExtendBookingRequest request) {
         return ResponseEntity.ok(bookingService.extendBooking(bookingId, driverId, request));
     }
-
-    // ── Get My Bookings
 
     @GetMapping("/my")
     @PreAuthorize("hasRole('DRIVER')")
     @Operation(summary = "Get all bookings for current driver",
             security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<List<BookingResponse>> getMyBookings(
-            @RequestHeader("Authorization") String authHeader
-    ) {
-        Long driverId = extractUserId(authHeader);
+            @RequestHeader("X-User-Id") Long driverId) {
         return ResponseEntity.ok(bookingService.getBookingsByDriver(driverId));
     }
-
-    // ── Get Booking By ID
 
     @GetMapping("/{bookingId}")
     @Operation(summary = "Get booking by ID",
             security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<BookingResponse> getBookingById(
-            @RequestHeader("Authorization") String authHeader,
-            @PathVariable Long bookingId
-    ) {
-        Long driverId = extractUserId(authHeader);
+            @RequestHeader("X-User-Id") Long driverId,
+            @PathVariable Long bookingId) {
         return ResponseEntity.ok(bookingService.getBookingById(bookingId, driverId));
     }
-
-    // ── Manager — Get Bookings For Lot
 
     @GetMapping("/manager/lot/{lotId}")
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     @Operation(summary = "Get all bookings for a lot — MANAGER only",
             security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<List<BookingResponse>> getBookingsForLot(
-            @PathVariable Long lotId
-    ) {
+    public ResponseEntity<List<BookingResponse>> getBookingsForLot(@PathVariable Long lotId) {
         return ResponseEntity.ok(bookingService.getBookingsByLot(lotId));
     }
-
-    // ── Admin — Get All Bookings
 
     @GetMapping("/admin/all")
     @PreAuthorize("hasRole('ADMIN')")
@@ -185,21 +149,11 @@ public class BookingResource {
         return ResponseEntity.ok(bookingService.getAllBookings());
     }
 
-    // ── Admin — Force Checkout
-
     @PutMapping("/admin/{bookingId}/force-checkout")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Force checkout a booking — ADMIN only",
             security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<BookingResponse> forceCheckout(
-            @PathVariable Long bookingId
-    ) {
+    public ResponseEntity<BookingResponse> forceCheckout(@PathVariable Long bookingId) {
         return ResponseEntity.ok(bookingService.forceCheckout(bookingId));
-    }
-
-    // ── Helper
-
-    private Long extractUserId(String authHeader) {
-        return jwtUtil.extractUserId(authHeader.substring(7));
     }
 }
