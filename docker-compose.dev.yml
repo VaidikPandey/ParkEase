@@ -114,6 +114,28 @@ services:
         limits:
           memory: 384m
 
+  analytics-service:
+    image: eclipse-temurin:17-jre-alpine
+    container_name: parkease-analytics
+    working_dir: /app
+    volumes:
+      - ./analytics-service/target/analytics-service.jar:/app/analytics-service.jar
+    command: >
+      java -Xmx256m -Xms128m
+      -Dspring.main.lazy-initialization=true
+      -jar analytics-service.jar
+    ports:
+      - "8086:8086"
+    env_file: .env
+    depends_on:
+      - postgres
+      - rabbitmq
+      - eureka-server
+    deploy:
+      resources:
+        limits:
+          memory: 384m
+
   api-gateway:
     image: eclipse-temurin:17-jre-alpine
     container_name: parkease-gateway
@@ -133,3 +155,4 @@ services:
       resources:
         limits:
           memory: 384m
+
