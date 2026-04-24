@@ -1,6 +1,6 @@
 package com.parkease.booking.config;
 
-import com.parkease.booking.security.JwtAuthFilter;
+import com.parkease.booking.security.HeaderAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthFilter jwtAuthFilter;
+    private final HeaderAuthFilter headerAuthFilter;
 
     private static final String[] PUBLIC_URLS = {
             "/swagger-ui/**",
@@ -38,7 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/bookings/manager/**").hasAnyRole("MANAGER", "ADMIN")
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(headerAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
