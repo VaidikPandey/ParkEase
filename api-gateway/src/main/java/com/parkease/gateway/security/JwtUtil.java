@@ -1,4 +1,4 @@
-package com.parkease.parking.security;
+package com.parkease.gateway.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -21,14 +21,10 @@ public class JwtUtil {
 
     public Claims extractClaims(String token) {
         return Jwts.parser()
-            .verifyWith(secretKey)
-            .build()
-            .parseSignedClaims(token)
-            .getPayload();
-    }
-
-    public String extractEmail(String token) {
-        return extractClaims(token).getSubject();
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     public String extractRole(String token) {

@@ -1,6 +1,6 @@
 package com.parkease.payment.config;
 
-import com.parkease.payment.security.JwtAuthFilter;
+import com.parkease.payment.security.HeaderAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Lazy(false)
 public class SecurityConfig {
 
-    private final JwtAuthFilter jwtAuthFilter;
+    private final HeaderAuthFilter headerAuthFilter;
 
     private static final String[] PUBLIC_URLS = {
             "/swagger-ui/**",
@@ -39,7 +39,7 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_URLS).permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(headerAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((req, res, e) ->
                                 res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))

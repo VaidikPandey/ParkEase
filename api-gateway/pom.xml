@@ -12,40 +12,22 @@
     </parent>
 
     <groupId>com.parkease</groupId>
-    <artifactId>payment-service</artifactId>
+    <artifactId>api-gateway</artifactId>
     <version>1.0.0</version>
-    <name>payment-service</name>
-    <description>ParkEase Payment Service</description>
+    <name>api-gateway</name>
+    <description>ParkEase API Gateway — JWT validation and routing</description>
 
     <properties>
         <java.version>22</java.version>
         <spring-cloud.version>2023.0.3</spring-cloud.version>
+        <jjwt.version>0.12.5</jjwt.version>
     </properties>
 
     <dependencies>
-        <!-- Web -->
+        <!-- Spring Cloud Gateway (WebFlux-based, do NOT add spring-boot-starter-web) -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <!-- JPA -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-        </dependency>
-
-        <!-- PostgreSQL -->
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-
-        <!-- RabbitMQ -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-amqp</artifactId>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-gateway</artifactId>
         </dependency>
 
         <!-- Eureka Client -->
@@ -54,18 +36,23 @@
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
 
-        <!-- Security -->
+        <!-- JWT validation -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>${jjwt.version}</version>
         </dependency>
-
-
-
-        <!-- Validation -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- Lombok -->
@@ -73,20 +60,6 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
-        </dependency>
-
-        <!-- Swagger / OpenAPI -->
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.5.0</version>
-        </dependency>
-
-        <!-- iText PDF -->
-        <dependency>
-            <groupId>com.itextpdf</groupId>
-            <artifactId>itextpdf</artifactId>
-            <version>5.5.13.3</version>
         </dependency>
 
         <!-- Actuator -->
@@ -109,7 +82,7 @@
     </dependencyManagement>
 
     <build>
-        <finalName>payment-service</finalName>
+        <finalName>api-gateway</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

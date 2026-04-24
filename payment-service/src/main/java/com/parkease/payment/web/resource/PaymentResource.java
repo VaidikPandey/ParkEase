@@ -27,7 +27,7 @@ public class PaymentResource {
     @Operation(summary = "Process a payment for a booking")
     public ResponseEntity<PaymentResponse> processPayment(
             @Valid @RequestBody PaymentRequest request,
-            @RequestAttribute("userId") Long callerId,
+            @RequestHeader("X-User-Id") Long callerId,
             Authentication auth) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(paymentService.processPayment(request, callerId, isAdmin(auth)));
@@ -37,7 +37,7 @@ public class PaymentResource {
     @Operation(summary = "Get payment by booking ID")
     public ResponseEntity<PaymentResponse> getByBooking(
             @PathVariable Long bookingId,
-            @RequestAttribute("userId") Long callerId,
+            @RequestHeader("X-User-Id") Long callerId,
             Authentication auth) {
         return ResponseEntity.ok(paymentService.getByBookingId(bookingId, callerId, isAdmin(auth)));
     }
@@ -46,7 +46,7 @@ public class PaymentResource {
     @Operation(summary = "Get payment status by payment ID")
     public ResponseEntity<PaymentResponse> getStatus(
             @PathVariable Long paymentId,
-            @RequestAttribute("userId") Long callerId,
+            @RequestHeader("X-User-Id") Long callerId,
             Authentication auth) {
         return ResponseEntity.ok(paymentService.getPaymentStatus(paymentId, callerId, isAdmin(auth)));
     }
@@ -55,7 +55,7 @@ public class PaymentResource {
     @Operation(summary = "Get all payments for a user")
     public ResponseEntity<List<PaymentResponse>> getByUser(
             @PathVariable Long userId,
-            @RequestAttribute("userId") Long callerId,
+            @RequestHeader("X-User-Id") Long callerId,
             Authentication auth) {
         if (!isAdmin(auth) && !userId.equals(callerId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -67,7 +67,7 @@ public class PaymentResource {
     @Operation(summary = "Process a refund for a booking")
     public ResponseEntity<PaymentResponse> refund(
             @Valid @RequestBody RefundRequest request,
-            @RequestAttribute("userId") Long callerId,
+            @RequestHeader("X-User-Id") Long callerId,
             Authentication auth) {
         return ResponseEntity.ok(paymentService.refundPayment(request, callerId, isAdmin(auth)));
     }
@@ -76,7 +76,7 @@ public class PaymentResource {
     @Operation(summary = "Download PDF receipt for a booking")
     public ResponseEntity<byte[]> downloadReceipt(
             @PathVariable Long bookingId,
-            @RequestAttribute("userId") Long callerId,
+            @RequestHeader("X-User-Id") Long callerId,
             Authentication auth) {
         byte[] pdf = paymentService.generateReceipt(bookingId, callerId, isAdmin(auth));
         HttpHeaders headers = new HttpHeaders();

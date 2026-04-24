@@ -1,6 +1,7 @@
 package com.parkease.parking.config;
 
-import com.parkease.parking.security.JwtAuthFilter;
+import com.parkease.parking.security.HeaderAuthFilter;
+import org.springframework.context.annotation.Lazy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthFilter jwtAuthFilter;
+    private final HeaderAuthFilter headerAuthFilter;
 
     private static final String[] PUBLIC_URLS = {
         "/api/v1/parking/lots/search",
@@ -44,7 +45,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/parking/manager/**").hasAnyRole("MANAGER", "ADMIN")
                 .anyRequest().authenticated()
             )
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(headerAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
