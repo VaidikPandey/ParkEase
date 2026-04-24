@@ -18,6 +18,7 @@ public class BookingEvent {
     private String driverEmail;
     private String vehiclePlate;
     private String eventType;          // BOOKING_CONFIRMED, CHECKED_IN, CHECKED_OUT, CANCELLED
+    private String bookingType;        // PRE_BOOKING or WALK_IN
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private LocalDateTime checkInTime;
