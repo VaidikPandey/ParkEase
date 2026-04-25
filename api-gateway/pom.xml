@@ -18,7 +18,7 @@
     <description>ParkEase API Gateway — JWT validation and routing</description>
 
     <properties>
-        <java.version>22</java.version>
+        <java.version>17</java.version>
         <spring-cloud.version>2023.0.3</spring-cloud.version>
         <jjwt.version>0.12.5</jjwt.version>
     </properties>
