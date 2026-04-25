@@ -129,13 +129,14 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     }
 
     @Override
-    public Object getRevenue(Long lotId, LocalDateTime from, LocalDateTime to, String authHeader) {
-        String url = paymentServiceUrl + "/api/v1/payments/revenue/lot/" + lotId
+    public Object getRevenue(Long lotId, LocalDateTime from, LocalDateTime to, Long userId, String role) {
+        String url = paymentServiceUrl + "/api/v1/payments/admin/revenue/lot/" + lotId
                 + "?from=" + from.format(FMT)
                 + "&to=" + to.format(FMT);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", authHeader);
+        headers.set("X-User-Id", String.valueOf(userId));
+        headers.set("X-User-Role", role);
 
         try {
             ResponseEntity<Object> response = restTemplate.exchange(

@@ -68,10 +68,11 @@ public class AnalyticsResource {
             @RequestParam Long lotId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader("X-User-Role") String role) {
         LocalDateTime resolvedTo   = to   != null ? to   : LocalDateTime.now();
         LocalDateTime resolvedFrom = from != null ? from : resolvedTo.minusDays(30);
-        return ResponseEntity.ok(analyticsService.getRevenue(lotId, resolvedFrom, resolvedTo, authHeader));
+        return ResponseEntity.ok(analyticsService.getRevenue(lotId, resolvedFrom, resolvedTo, userId, role));
     }
 
     @GetMapping("/summary")
