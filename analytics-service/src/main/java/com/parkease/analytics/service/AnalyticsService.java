@@ -15,7 +15,7 @@ public interface AnalyticsService {
 
     List<HourlyTrafficResponse> getHourlyTraffic(Long lotId, LocalDateTime from, LocalDateTime to);
 
-    Object getRevenue(Long lotId, LocalDateTime from, LocalDateTime to, String authHeader);
+    Object getRevenue(Long lotId, LocalDateTime from, LocalDateTime to, Long userId, String role);
 
     LotSummaryResponse getLotSummary(Long lotId);
 }
