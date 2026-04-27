@@ -7,5 +7,5 @@ RUN mvn package -DskipTests -q
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-COPY --from=build /app/target/analytics-service-1.0.0.jar app.jar
+COPY --from=build /app/target/*.jar app.jar
 ENTRYPOINT ["java", "-Xmx128m", "-Xms48m", "-Dspring.main.lazy-initialization=true", "-jar", "app.jar"]

@@ -7,5 +7,5 @@ RUN mvn package -DskipTests -q
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-COPY --from=build /app/target/eureka-server-1.0.0.jar app.jar
+COPY --from=build /app/target/*.jar app.jar
 ENTRYPOINT ["java", "-Xmx128m", "-Xms64m", "-Dspring.main.lazy-initialization=true", "-jar", "app.jar"]
