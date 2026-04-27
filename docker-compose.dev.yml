@@ -22,16 +22,9 @@ x-pg-env: &pg-env
 services:
 
   auth-service:
-    image: eclipse-temurin:17-jre-alpine
+    build: ./auth-service
     container_name: parkease-auth
     restart: unless-stopped
-    working_dir: /app
-    volumes:
-      - ./auth-service/target/auth-service.jar:/app/auth-service.jar
-    command: >
-      java -Xmx200m -Xms64m
-      -Dspring.main.lazy-initialization=true
-      -jar auth-service.jar
     ports:
       - "8081:8081"
     environment:
@@ -50,16 +43,9 @@ services:
           memory: 320m
 
   parking-service:
-    image: eclipse-temurin:17-jre-alpine
+    build: ./parking-service
     container_name: parkease-parking
     restart: unless-stopped
-    working_dir: /app
-    volumes:
-      - ./parking-service/target/parking-service.jar:/app/parking-service.jar
-    command: >
-      java -Xmx200m -Xms64m
-      -Dspring.main.lazy-initialization=true
-      -jar parking-service.jar
     ports:
       - "8082:8082"
     environment:
@@ -76,16 +62,9 @@ services:
           memory: 320m
 
   booking-service:
-    image: eclipse-temurin:17-jre-alpine
+    build: ./booking-service
     container_name: parkease-booking
     restart: unless-stopped
-    working_dir: /app
-    volumes:
-      - ./booking-service/target/booking-service.jar:/app/booking-service.jar
-    command: >
-      java -Xmx200m -Xms64m
-      -Dspring.main.lazy-initialization=true
-      -jar booking-service.jar
     ports:
       - "8083:8083"
     environment:
@@ -102,16 +81,9 @@ services:
           memory: 320m
 
   payment-service:
-    image: eclipse-temurin:17-jre-alpine
+    build: ./payment-service
     container_name: parkease-payment
     restart: unless-stopped
-    working_dir: /app
-    volumes:
-      - ./payment-service/target/payment-service.jar:/app/payment-service.jar
-    command: >
-      java -Xmx160m -Xms48m
-      -Dspring.main.lazy-initialization=true
-      -jar payment-service.jar
     ports:
       - "8084:8084"
     environment:
@@ -127,16 +99,9 @@ services:
           memory: 256m
 
   notification-service:
-    image: eclipse-temurin:17-jre-alpine
+    build: ./notification-service
     container_name: parkease-notification
     restart: unless-stopped
-    working_dir: /app
-    volumes:
-      - ./notification-service/target/notification-service.jar:/app/notification-service.jar
-    command: >
-      java -Xmx128m -Xms48m
-      -Dspring.main.lazy-initialization=true
-      -jar notification-service.jar
     ports:
       - "8085:8085"
     environment:
@@ -158,16 +123,9 @@ services:
           memory: 224m
 
   analytics-service:
-    image: eclipse-temurin:17-jre-alpine
+    build: ./analytics-service
     container_name: parkease-analytics
     restart: unless-stopped
-    working_dir: /app
-    volumes:
-      - ./analytics-service/target/analytics-service.jar:/app/analytics-service.jar
-    command: >
-      java -Xmx128m -Xms48m
-      -Dspring.main.lazy-initialization=true
-      -jar analytics-service.jar
     ports:
       - "8086:8086"
     environment:
@@ -183,16 +141,9 @@ services:
           memory: 224m
 
   api-gateway:
-    image: eclipse-temurin:17-jre-alpine
+    build: ./api-gateway
     container_name: parkease-gateway
     restart: unless-stopped
-    working_dir: /app
-    volumes:
-      - ./api-gateway/target/api-gateway.jar:/app/api-gateway.jar
-    command: >
-      java -Xmx160m -Xms48m
-      -Dspring.main.lazy-initialization=true
-      -jar api-gateway.jar
     ports:
       - "8080:8080"
     environment:

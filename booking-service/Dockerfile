@@ -1,0 +1,11 @@
+FROM maven:3.9-eclipse-temurin-17-alpine AS build
+WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline -q
+COPY src ./src
+RUN mvn package -DskipTests -q
+
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+COPY --from=build /app/target/booking-service-1.0.0.jar app.jar
+ENTRYPOINT ["java", "-Xmx200m", "-Xms64m", "-Dspring.main.lazy-initialization=true", "-jar", "app.jar"]
