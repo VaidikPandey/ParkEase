@@ -68,6 +68,10 @@ public class Booking {
     @Column
     private String cancellationReason;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean reminderSent = false;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

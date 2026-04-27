@@ -361,6 +361,23 @@ public class BookingServiceImpl implements BookingService {
         }
     }
 
+    // ── Expiry Reminder (15 min before end time)
+
+    @Scheduled(fixedDelay = 60000)
+    public void sendExpiryReminders() {
+        LocalDateTime now          = LocalDateTime.now();
+        LocalDateTime reminderTime = now.plusMinutes(15);
+
+        List<Booking> endingSoon = bookingRepository.findBookingsEndingSoon(now, reminderTime);
+
+        for (Booking booking : endingSoon) {
+            publishEvent(booking, booking.getDriverEmail(), RabbitMQConfig.BOOKING_REMINDER_KEY);
+            booking.setReminderSent(true);
+            bookingRepository.save(booking);
+            log.info("Sent expiry reminder for booking: id={}", booking.getBookingId());
+        }
+    }
+
     // ── Private Helpers
 
     private Booking findBookingById(Long bookingId) {
