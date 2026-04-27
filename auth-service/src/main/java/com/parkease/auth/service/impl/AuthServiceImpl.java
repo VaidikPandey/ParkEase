@@ -154,6 +154,20 @@ public class AuthServiceImpl implements AuthService {
         log.info("Account deactivated: userId={}", userId);
     }
 
+    // ── Select Role (OAuth onboarding) ────────────────────────────────────────
+
+    @Override
+    public AuthResponse selectRole(Long userId, String role) {
+        if (!role.equals("DRIVER") && !role.equals("MANAGER")) {
+            throw new IllegalArgumentException("Role must be DRIVER or MANAGER");
+        }
+        User user = findUserById(userId);
+        user.setRole(User.Role.valueOf(role));
+        userRepository.save(user);
+        log.info("Role selected: userId={} role={}", userId, role);
+        return buildAuthResponse(user);
+    }
+
     // ── Private Helpers ───────────────────────────────────────────────────────
 
     private User findUserById(Long userId) {

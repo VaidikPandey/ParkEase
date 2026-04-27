@@ -144,6 +144,21 @@ public class AuthResource {
         return ResponseEntity.noContent().build();
     }
 
+    // ── Select Role (OAuth onboarding) ────────────────────────────────────────
+
+    @PatchMapping("/role")
+    @Operation(
+        summary = "Set role for new OAuth users — DRIVER or MANAGER only",
+        security = @SecurityRequirement(name = "bearerAuth")
+    )
+    public ResponseEntity<AuthResponse> selectRole(
+        @RequestHeader("Authorization") String authHeader,
+        @RequestBody java.util.Map<String, String> body
+    ) {
+        Long userId = extractUserId(authHeader);
+        return ResponseEntity.ok(authService.selectRole(userId, body.get("role")));
+    }
+
     // ── Helper ────────────────────────────────────────────────────────────────
 
     private Long extractUserId(String authHeader) {

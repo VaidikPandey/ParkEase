@@ -12,4 +12,5 @@ public interface AuthService {
     UserProfileResponse updateProfile(Long userId, UpdateProfileRequest request);
     void changePassword(Long userId, ChangePasswordRequest request);
     void deactivateAccount(Long userId);
+    AuthResponse selectRole(Long userId, String role);
 }

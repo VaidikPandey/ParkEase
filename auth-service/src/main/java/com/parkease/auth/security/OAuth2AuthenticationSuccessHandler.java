@@ -36,25 +36,24 @@ public class OAuth2AuthenticationSuccessHandler
         String picUrl    = oAuth2User.getAttribute("picture");
         String googleId  = oAuth2User.getAttribute("sub");
 
-        // find existing user or create new one
+        // find existing user or create new one — track if newly created
+        boolean[] isNew = { false };
         User user = userRepository
                 .findByOauthProviderAndOauthProviderId("google", googleId)
-                .orElseGet(() -> {
-                    // check if email already registered normally
-                    return userRepository.findByEmail(email)
-                            .orElseGet(() -> {
-                                User newUser = User.builder()
-                                        .fullName(name)
-                                        .email(email)
-                                        .role(User.Role.DRIVER)  // default role for OAuth users
-                                        .oauthProvider("google")
-                                        .oauthProviderId(googleId)
-                                        .profilePicUrl(picUrl)
-                                        .isActive(true)
-                                        .build();
-                                return userRepository.save(newUser);
-                            });
-                });
+                .orElseGet(() -> userRepository.findByEmail(email)
+                        .orElseGet(() -> {
+                            isNew[0] = true;
+                            User newUser = User.builder()
+                                    .fullName(name)
+                                    .email(email)
+                                    .role(User.Role.DRIVER)
+                                    .oauthProvider("google")
+                                    .oauthProviderId(googleId)
+                                    .profilePicUrl(picUrl)
+                                    .isActive(true)
+                                    .build();
+                            return userRepository.save(newUser);
+                        }));
 
         // generate JWT
         String accessToken  = jwtUtil.generateAccessToken(
@@ -62,13 +61,12 @@ public class OAuth2AuthenticationSuccessHandler
         );
         String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
 
-        log.info("OAuth2 login successful for: {}", email);
+        log.info("OAuth2 login successful for: {} (new={})", email, isNew[0]);
 
-        // redirect to frontend with tokens as query params
-        // on Day 8 when Angular is ready, change this URL to your frontend
         String redirectUrl = "http://localhost:4200/oauth2/success"
                 + "?accessToken=" + accessToken
-                + "&refreshToken=" + refreshToken;
+                + "&refreshToken=" + refreshToken
+                + "&isNewUser=" + isNew[0];
 
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
