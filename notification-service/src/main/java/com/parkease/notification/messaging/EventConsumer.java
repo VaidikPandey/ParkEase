@@ -36,6 +36,7 @@ public class EventConsumer {
                 case "booking.checkout"   -> handleCheckOut(event);
                 case "booking.cancelled"  -> handleBookingCancelled(event);
                 case "booking.expiry"     -> handleExpiry(event);
+                case "booking.reminder"   -> handleExpiryReminder(event);
                 case "payment.completed"  -> handlePaymentCompleted(event);
                 case "payment.refunded"   -> handleRefundProcessed(event);
                 default -> log.warn("Unhandled event type: {}", eventType);
@@ -87,6 +88,17 @@ public class EventConsumer {
         String message   = "Your booking #" + bookingId + " has been cancelled.";
         notificationService.createFromEvent(driverId,
                 Notification.NotificationType.BOOKING, title, message, bookingId, "BOOKING");
+        if (email != null) notificationService.sendEmail(email, "[ParkEase] " + title, message);
+    }
+
+    private void handleExpiryReminder(Map<String, Object> event) {
+        Long driverId  = toLong(event.get("driverId"));
+        Long bookingId = toLong(event.get("bookingId"));
+        String email   = (String) event.get("driverEmail");
+        String title   = "Parking Expiring Soon";
+        String message = "Your parking booking #" + bookingId + " expires in 15 minutes. Please check out or extend your stay.";
+        notificationService.createFromEvent(driverId,
+                Notification.NotificationType.EXPIRY, title, message, bookingId, "BOOKING");
         if (email != null) notificationService.sendEmail(email, "[ParkEase] " + title, message);
     }
 

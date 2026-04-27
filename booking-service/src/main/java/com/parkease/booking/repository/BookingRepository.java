@@ -45,10 +45,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
         """)
     List<Booking> findExpiredBookings(@Param("cutoffTime") LocalDateTime cutoffTime);
 
-    // find bookings ending soon — for expiry reminder notifications
+    // find bookings ending soon — for expiry reminder notifications (not yet reminded)
     @Query("""
         SELECT b FROM Booking b
         WHERE b.status = 'CHECKED_IN'
+        AND b.reminderSent = false
         AND b.endTime BETWEEN :now AND :reminderTime
         """)
     List<Booking> findBookingsEndingSoon(

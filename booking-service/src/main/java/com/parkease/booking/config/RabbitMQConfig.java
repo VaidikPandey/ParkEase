@@ -22,6 +22,7 @@ public class RabbitMQConfig {
     public static final String BOOKING_CHECKIN_KEY    = "booking.checkin";
     public static final String BOOKING_CHECKOUT_KEY   = "booking.checkout";
     public static final String BOOKING_EXPIRY_KEY     = "booking.expiry";
+    public static final String BOOKING_REMINDER_KEY   = "booking.reminder";
 
     // ── Queues, a mailbox. notification-service listens to this queue
     public static final String NOTIFICATION_QUEUE = "parkease.notification.queue";
