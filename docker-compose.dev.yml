@@ -148,6 +148,7 @@ services:
       - "8080:8080"
     environment:
       <<: *eureka-env
+      SPRING_CLOUD_LOADBALANCER_CACHE_TTL: 5s
     depends_on:
       - eureka-server
     deploy:
