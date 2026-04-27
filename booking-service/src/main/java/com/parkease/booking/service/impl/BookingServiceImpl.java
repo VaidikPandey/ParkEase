@@ -92,6 +92,7 @@ public class BookingServiceImpl implements BookingService {
                     .endTime(request.getEndTime())
                     .pricePerHour(request.getPricePerHour())
                     .vehiclePlate(request.getVehiclePlate())
+                    .driverEmail(request.getDriverEmail())
                     .build();
 
             bookingRepository.save(booking);
@@ -135,7 +136,7 @@ public class BookingServiceImpl implements BookingService {
 
         log.info("Check-in: bookingId={} driverId={}", bookingId, driverId);
 
-        publishEvent(booking, null, RabbitMQConfig.BOOKING_CHECKIN_KEY);
+        publishEvent(booking, booking.getDriverEmail(), RabbitMQConfig.BOOKING_CHECKIN_KEY);
 
         return BookingResponse.from(booking);
     }
@@ -166,7 +167,7 @@ public class BookingServiceImpl implements BookingService {
 
         log.info("Check-out: bookingId={} fare={}", bookingId, fare);
 
-        publishEvent(booking, null, RabbitMQConfig.BOOKING_CHECKOUT_KEY);
+        publishEvent(booking, booking.getDriverEmail(), RabbitMQConfig.BOOKING_CHECKOUT_KEY);
 
         return BookingResponse.from(booking);
     }
@@ -210,7 +211,7 @@ public class BookingServiceImpl implements BookingService {
 
         log.info("Booking cancelled: id={} reason={}", bookingId, reason);
 
-        publishEvent(booking, null, RabbitMQConfig.BOOKING_CANCELLED_KEY);
+        publishEvent(booking, booking.getDriverEmail(), RabbitMQConfig.BOOKING_CANCELLED_KEY);
 
         return BookingResponse.from(booking);
     }
@@ -330,7 +331,7 @@ public class BookingServiceImpl implements BookingService {
         bookingRepository.save(booking);
         log.info("Force checkout: bookingId={} fare={}", bookingId, fare);
 
-        publishEvent(booking, null, RabbitMQConfig.BOOKING_CHECKOUT_KEY);
+        publishEvent(booking, booking.getDriverEmail(), RabbitMQConfig.BOOKING_CHECKOUT_KEY);
 
         return BookingResponse.from(booking);
     }
@@ -350,7 +351,7 @@ public class BookingServiceImpl implements BookingService {
             booking.setCancellationReason("Auto-cancelled: no check-in within grace period");
             bookingRepository.save(booking);
 
-            publishEvent(booking, null, RabbitMQConfig.BOOKING_EXPIRY_KEY);
+            publishEvent(booking, booking.getDriverEmail(), RabbitMQConfig.BOOKING_EXPIRY_KEY);
 
             log.info("Auto-cancelled expired booking: id={}", booking.getBookingId());
         }

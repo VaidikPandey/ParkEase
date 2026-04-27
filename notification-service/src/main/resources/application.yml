@@ -36,10 +36,10 @@ spring:
           max-attempts: 3
 
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: noreply@parkease.com
-    password: changeme
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:noreply@parkease.com}
+    password: ${MAIL_PASSWORD:changeme}
     properties:
       mail:
         smtp:
@@ -48,8 +48,8 @@ spring:
             enable: true
 
 mail:
-  enabled: false
-  from: noreply@parkease.com
+  enabled: ${MAIL_ENABLED:false}
+  from: ${MAIL_FROM:noreply@parkease.com}
 
 eureka:
   client:

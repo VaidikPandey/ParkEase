@@ -13,8 +13,10 @@ public interface ParkingLotService {
     List<ParkingLotResponse> getLotsByManager(Long managerId);
     List<ParkingLotResponse> getLotsByCity(String city);
     List<ParkingLotResponse> getNearbyLots(double lat, double lng, double radiusKm);
-    void toggleLotStatus(Long lotId, Long managerId);
+    ParkingLotResponse toggleLotStatus(Long lotId, Long managerId);
     void approveLot(Long lotId);
     void rejectLot(Long lotId);
     List<ParkingLotResponse> getPendingLots();
+    List<ParkingLotResponse> getAllLots();
+    List<ParkingLotResponse> getApprovedLots();
 }

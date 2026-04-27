@@ -34,10 +34,13 @@ public class ParkingLotResource {
     // ── Public
 
     @GetMapping("/lots/search")
-    @Operation(summary = "Search approved lots by city — public")
+    @Operation(summary = "Search approved lots — public; optional city filter")
     public ResponseEntity<List<ParkingLotResponse>> searchByCity(
-            @RequestParam String city
+            @RequestParam(required = false) String city
     ) {
+        if (city == null || city.isBlank()) {
+            return ResponseEntity.ok(lotService.getApprovedLots());
+        }
         return ResponseEntity.ok(lotService.getLotsByCity(city));
     }
 
@@ -109,12 +112,11 @@ public class ParkingLotResource {
     @PreAuthorize("hasRole('MANAGER')")
     @Operation(summary = "Toggle lot open/closed — MANAGER only",
             security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<Void> toggleStatus(
+    public ResponseEntity<ParkingLotResponse> toggleStatus(
             @RequestHeader("X-User-Id") Long managerId,
             @PathVariable Long id
     ) {
-        lotService.toggleLotStatus(id, managerId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(lotService.toggleLotStatus(id, managerId));
     }
 
     @GetMapping("/manager/lots")
@@ -128,6 +130,14 @@ public class ParkingLotResource {
     }
 
     // ── Admin
+
+    @GetMapping("/admin/lots/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Get all lots regardless of status — ADMIN only",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<List<ParkingLotResponse>> getAllLots() {
+        return ResponseEntity.ok(lotService.getAllLots());
+    }
 
     @GetMapping("/admin/lots/pending")
     @PreAuthorize("hasRole('ADMIN')")
