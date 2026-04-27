@@ -1,5 +1,24 @@
 version: '3.9'
 
+x-eureka-env: &eureka-env
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+  EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+
+x-rabbit-env: &rabbit-env
+  SPRING_RABBITMQ_HOST: rabbitmq
+  SPRING_RABBITMQ_PORT: "5672"
+  SPRING_RABBITMQ_USERNAME: rabbitmq
+  SPRING_RABBITMQ_PASSWORD: rabbitmq123
+
+x-redis-env: &redis-env
+  SPRING_DATA_REDIS_HOST: redis
+  SPRING_DATA_REDIS_PORT: "6379"
+  SPRING_DATA_REDIS_PASSWORD: redis123
+
+x-pg-env: &pg-env
+  SPRING_DATASOURCE_USERNAME: postgres
+  SPRING_DATASOURCE_PASSWORD: postgres
+
 services:
 
   auth-service:
@@ -10,12 +29,17 @@ services:
     volumes:
       - ./auth-service/target/auth-service.jar:/app/auth-service.jar
     command: >
-      java -Xmx384m -Xms256m
+      java -Xmx200m -Xms64m
       -Dspring.main.lazy-initialization=true
       -jar auth-service.jar
     ports:
       - "8081:8081"
-    env_file: .env
+    environment:
+      <<: [*eureka-env, *redis-env, *pg-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auth_db
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-changeme}
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_REDIRECTURI: http://localhost:8080/oauth2/callback/google
     depends_on:
       - postgres
       - redis
@@ -23,43 +47,50 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512m
+          memory: 320m
 
   parking-service:
     image: eclipse-temurin:17-jre-alpine
     container_name: parkease-parking
+    restart: unless-stopped
     working_dir: /app
     volumes:
       - ./parking-service/target/parking-service.jar:/app/parking-service.jar
     command: >
-      java -Xmx384m -Xms256m
+      java -Xmx200m -Xms64m
       -Dspring.main.lazy-initialization=true
       -jar parking-service.jar
     ports:
       - "8082:8082"
-    env_file: .env
+    environment:
+      <<: [*eureka-env, *redis-env, *rabbit-env, *pg-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/parking_db
     depends_on:
       - postgres
       - redis
+      - rabbitmq
       - eureka-server
     deploy:
       resources:
         limits:
-          memory: 512m
+          memory: 320m
 
   booking-service:
     image: eclipse-temurin:17-jre-alpine
     container_name: parkease-booking
+    restart: unless-stopped
     working_dir: /app
     volumes:
       - ./booking-service/target/booking-service.jar:/app/booking-service.jar
     command: >
-      java -Xmx384m -Xms256m
+      java -Xmx200m -Xms64m
       -Dspring.main.lazy-initialization=true
       -jar booking-service.jar
     ports:
       - "8083:8083"
-    env_file: .env
+    environment:
+      <<: [*eureka-env, *redis-env, *rabbit-env, *pg-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/booking_db
     depends_on:
       - postgres
       - redis
@@ -68,21 +99,24 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512m
+          memory: 320m
 
   payment-service:
     image: eclipse-temurin:17-jre-alpine
     container_name: parkease-payment
+    restart: unless-stopped
     working_dir: /app
     volumes:
       - ./payment-service/target/payment-service.jar:/app/payment-service.jar
     command: >
-      java -Xmx384m -Xms256m
+      java -Xmx160m -Xms48m
       -Dspring.main.lazy-initialization=true
       -jar payment-service.jar
     ports:
       - "8084:8084"
-    env_file: .env
+    environment:
+      <<: [*eureka-env, *rabbit-env, *pg-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payment_db
     depends_on:
       - postgres
       - rabbitmq
@@ -90,21 +124,30 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512m
+          memory: 256m
 
   notification-service:
     image: eclipse-temurin:17-jre-alpine
     container_name: parkease-notification
+    restart: unless-stopped
     working_dir: /app
     volumes:
       - ./notification-service/target/notification-service.jar:/app/notification-service.jar
     command: >
-      java -Xmx256m -Xms128m
+      java -Xmx128m -Xms48m
       -Dspring.main.lazy-initialization=true
       -jar notification-service.jar
     ports:
       - "8085:8085"
-    env_file: .env
+    environment:
+      <<: [*eureka-env, *rabbit-env, *pg-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notification_db
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-noreply@parkease.com}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-changeme}
+      MAIL_FROM: ${MAIL_FROM:-noreply@parkease.com}
+      MAIL_ENABLED: ${MAIL_ENABLED:-false}
     depends_on:
       - postgres
       - rabbitmq
@@ -112,21 +155,24 @@ services:
     deploy:
       resources:
         limits:
-          memory: 384m
+          memory: 224m
 
   analytics-service:
     image: eclipse-temurin:17-jre-alpine
     container_name: parkease-analytics
+    restart: unless-stopped
     working_dir: /app
     volumes:
       - ./analytics-service/target/analytics-service.jar:/app/analytics-service.jar
     command: >
-      java -Xmx256m -Xms128m
+      java -Xmx128m -Xms48m
       -Dspring.main.lazy-initialization=true
       -jar analytics-service.jar
     ports:
       - "8086:8086"
-    env_file: .env
+    environment:
+      <<: [*eureka-env, *rabbit-env, *pg-env]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/analytics_db
     depends_on:
       - postgres
       - rabbitmq
@@ -134,25 +180,26 @@ services:
     deploy:
       resources:
         limits:
-          memory: 384m
+          memory: 224m
 
   api-gateway:
     image: eclipse-temurin:17-jre-alpine
     container_name: parkease-gateway
+    restart: unless-stopped
     working_dir: /app
     volumes:
       - ./api-gateway/target/api-gateway.jar:/app/api-gateway.jar
     command: >
-      java -Xmx256m -Xms128m
+      java -Xmx160m -Xms48m
       -Dspring.main.lazy-initialization=true
       -jar api-gateway.jar
     ports:
       - "8080:8080"
-    env_file: .env
+    environment:
+      <<: *eureka-env
     depends_on:
       - eureka-server
     deploy:
       resources:
         limits:
-          memory: 384m
-
+          memory: 256m

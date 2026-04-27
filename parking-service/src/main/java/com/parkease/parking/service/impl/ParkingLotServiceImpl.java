@@ -116,7 +116,7 @@ public class ParkingLotServiceImpl implements ParkingLotService {
     }
 
     @Override
-    public void toggleLotStatus(Long lotId, Long managerId) {
+    public ParkingLotResponse toggleLotStatus(Long lotId, Long managerId) {
         ParkingLot lot = findLotById(lotId);
         validateManagerOwnership(lot, managerId);
 
@@ -130,6 +130,8 @@ public class ParkingLotServiceImpl implements ParkingLotService {
 
         lotRepository.save(lot);
         log.info("Lot {} status toggled to {}", lotId, lot.getStatus());
+        int available = counterService.getAvailableCount(lotId);
+        return ParkingLotResponse.from(lot, available);
     }
 
     @Override
@@ -171,6 +173,30 @@ public class ParkingLotServiceImpl implements ParkingLotService {
         return lotRepository.findByStatus(ParkingLot.LotStatus.PENDING)
                 .stream()
                 .map(lot -> ParkingLotResponse.from(lot, 0))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ParkingLotResponse> getApprovedLots() {
+        return lotRepository.findByStatus(ParkingLot.LotStatus.APPROVED)
+                .stream()
+                .map(lot -> {
+                    int available = counterService.getAvailableCount(lot.getLotId());
+                    return ParkingLotResponse.from(lot, available);
+                })
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ParkingLotResponse> getAllLots() {
+        return lotRepository.findAll()
+                .stream()
+                .map(lot -> {
+                    int available = counterService.getAvailableCount(lot.getLotId());
+                    return ParkingLotResponse.from(lot, available);
+                })
                 .toList();
     }
 

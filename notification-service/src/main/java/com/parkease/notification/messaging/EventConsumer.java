@@ -46,77 +46,84 @@ public class EventConsumer {
     }
 
     private void handleBookingConfirmed(Map<String, Object> event) {
-        Long driverId  = toLong(event.get("driverId"));
-        Long bookingId = toLong(event.get("bookingId"));
+        Long driverId    = toLong(event.get("driverId"));
+        Long bookingId   = toLong(event.get("bookingId"));
+        String email     = (String) event.get("driverEmail");
+        String title     = "Booking Confirmed";
+        String message   = "Your parking booking #" + bookingId + " is confirmed. See you at the lot!";
         notificationService.createFromEvent(driverId,
-                Notification.NotificationType.BOOKING,
-                "Booking Confirmed",
-                "Your parking booking #" + bookingId + " is confirmed. See you at the lot!",
-                bookingId, "BOOKING");
+                Notification.NotificationType.BOOKING, title, message, bookingId, "BOOKING");
+        if (email != null) notificationService.sendEmail(email, "[ParkEase] " + title, message);
     }
 
     private void handleCheckIn(Map<String, Object> event) {
-        Long driverId  = toLong(event.get("driverId"));
-        Long bookingId = toLong(event.get("bookingId"));
+        Long driverId    = toLong(event.get("driverId"));
+        Long bookingId   = toLong(event.get("bookingId"));
+        String email     = (String) event.get("driverEmail");
+        String title     = "Check-In Successful";
+        String message   = "You have checked in for booking #" + bookingId + ". Enjoy your parking!";
         notificationService.createFromEvent(driverId,
-                Notification.NotificationType.CHECKIN,
-                "Check-In Successful",
-                "You have checked in for booking #" + bookingId + ". Enjoy your parking!",
-                bookingId, "BOOKING");
+                Notification.NotificationType.CHECKIN, title, message, bookingId, "BOOKING");
+        if (email != null) notificationService.sendEmail(email, "[ParkEase] " + title, message);
     }
 
     private void handleCheckOut(Map<String, Object> event) {
-        Long driverId  = toLong(event.get("driverId"));
-        Long bookingId = toLong(event.get("bookingId"));
-        Object fare    = event.get("totalFare");
+        Long driverId    = toLong(event.get("driverId"));
+        Long bookingId   = toLong(event.get("bookingId"));
+        String email     = (String) event.get("driverEmail");
+        Object fare      = event.get("totalFare");
+        String title     = "Check-Out Complete";
+        String message   = "Checked out for booking #" + bookingId + ". Total fare: ₹" + fare + ". Thank you!";
         notificationService.createFromEvent(driverId,
-                Notification.NotificationType.CHECKOUT,
-                "Check-Out Complete",
-                "Checked out for booking #" + bookingId + ". Total fare: ₹" + fare + ". Thank you!",
-                bookingId, "BOOKING");
+                Notification.NotificationType.CHECKOUT, title, message, bookingId, "BOOKING");
+        if (email != null) notificationService.sendEmail(email, "[ParkEase] " + title, message);
     }
 
     private void handleBookingCancelled(Map<String, Object> event) {
-        Long driverId  = toLong(event.get("driverId"));
-        Long bookingId = toLong(event.get("bookingId"));
+        Long driverId    = toLong(event.get("driverId"));
+        Long bookingId   = toLong(event.get("bookingId"));
+        String email     = (String) event.get("driverEmail");
+        String title     = "Booking Cancelled";
+        String message   = "Your booking #" + bookingId + " has been cancelled.";
         notificationService.createFromEvent(driverId,
-                Notification.NotificationType.BOOKING,
-                "Booking Cancelled",
-                "Your booking #" + bookingId + " has been cancelled.",
-                bookingId, "BOOKING");
+                Notification.NotificationType.BOOKING, title, message, bookingId, "BOOKING");
+        if (email != null) notificationService.sendEmail(email, "[ParkEase] " + title, message);
     }
 
     private void handleExpiry(Map<String, Object> event) {
-        Long driverId  = toLong(event.get("driverId"));
-        Long bookingId = toLong(event.get("bookingId"));
+        Long driverId    = toLong(event.get("driverId"));
+        Long bookingId   = toLong(event.get("bookingId"));
+        String email     = (String) event.get("driverEmail");
+        String title     = "Booking Expired";
+        String message   = "Booking #" + bookingId + " expired — no check-in within the grace period.";
         notificationService.createFromEvent(driverId,
-                Notification.NotificationType.EXPIRY,
-                "Booking Expired",
-                "Booking #" + bookingId + " expired — no check-in within the grace period.",
-                bookingId, "BOOKING");
+                Notification.NotificationType.EXPIRY, title, message, bookingId, "BOOKING");
+        if (email != null) notificationService.sendEmail(email, "[ParkEase] " + title, message);
     }
 
     private void handlePaymentCompleted(Map<String, Object> event) {
-        Long userId    = toLong(event.get("userId"));
-        Long bookingId = toLong(event.get("bookingId"));
-        Object amount  = event.get("amount");
-        String txnId   = (String) event.get("transactionId");
+        Long userId      = toLong(event.get("userId"));
+        Long bookingId   = toLong(event.get("bookingId"));
+        Object amount    = event.get("amount");
+        String txnId     = (String) event.get("transactionId");
+        String email     = (String) event.get("driverEmail");
+        String title     = "Payment Received";
+        String message   = "Payment of ₹" + amount + " for booking #" + bookingId + " confirmed. TxnID: " + txnId;
         notificationService.createFromEvent(userId,
-                Notification.NotificationType.PAYMENT,
-                "Payment Received",
-                "Payment of ₹" + amount + " for booking #" + bookingId + " confirmed. TxnID: " + txnId,
-                bookingId, "PAYMENT");
+                Notification.NotificationType.PAYMENT, title, message, bookingId, "PAYMENT");
+        if (email != null) notificationService.sendEmail(email, "[ParkEase] " + title, message);
     }
 
     private void handleRefundProcessed(Map<String, Object> event) {
-        Long userId    = toLong(event.get("userId"));
-        Long bookingId = toLong(event.get("bookingId"));
-        Object amount  = event.get("amount");
+        Long userId      = toLong(event.get("userId"));
+        Long bookingId   = toLong(event.get("bookingId"));
+        Object amount    = event.get("amount");
+        String email     = (String) event.get("driverEmail");
+        String title     = "Refund Processed";
+        String message   = "A refund of ₹" + amount + " for booking #" + bookingId + " has been processed.";
         notificationService.createFromEvent(userId,
-                Notification.NotificationType.REFUND,
-                "Refund Processed",
-                "A refund of ₹" + amount + " for booking #" + bookingId + " has been processed.",
-                bookingId, "PAYMENT");
+                Notification.NotificationType.REFUND, title, message, bookingId, "PAYMENT");
+        if (email != null) notificationService.sendEmail(email, "[ParkEase] " + title, message);
     }
 
     private Long toLong(Object val) {

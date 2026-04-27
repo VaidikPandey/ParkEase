@@ -63,6 +63,9 @@ public class Booking {
     private String vehiclePlate;
 
     @Column
+    private String driverEmail;
+
+    @Column
     private String cancellationReason;
 
     @CreationTimestamp
