@@ -32,6 +32,12 @@ public class ParkingSpotServiceImpl implements ParkingSpotService {
     public ParkingSpotResponse addSpot(Long lotId, Long managerId, CreateSpotRequest request) {
         ParkingLot lot = findAndValidateLot(lotId, managerId);
 
+        if (lot.getTotalSpots() >= lot.getMaxCapacity()) {
+            throw new IllegalStateException(
+                    "Lot has reached its maximum capacity of " + lot.getMaxCapacity() + " spots."
+            );
+        }
+
         if (spotRepository.existsByParkingLot_LotIdAndSpotNumber(lotId, request.getSpotNumber())) {
             throw new IllegalStateException(
                     "Spot number already exists in this lot: " + request.getSpotNumber()
@@ -56,6 +62,13 @@ public class ParkingSpotServiceImpl implements ParkingSpotService {
             Long lotId, Long managerId, BulkCreateSpotRequest request
     ) {
         ParkingLot lot = findAndValidateLot(lotId, managerId);
+
+        int remaining = lot.getMaxCapacity() - lot.getTotalSpots();
+        if (request.getSpots().size() > remaining) {
+            throw new IllegalStateException(
+                    "Cannot add " + request.getSpots().size() + " spots. Lot only has capacity for " + remaining + " more."
+            );
+        }
 
         List<ParkingSpot> spots = request.getSpots().stream()
                 .map(r -> {

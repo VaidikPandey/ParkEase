@@ -55,6 +55,9 @@ public class ParkingLot {
     @Column(nullable = false)
     private int totalSpots = 0;
 
+    @Column(nullable = false)
+    private int maxCapacity = 0;
+
     @OneToMany(mappedBy = "parkingLot", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ParkingSpot> spots;
 

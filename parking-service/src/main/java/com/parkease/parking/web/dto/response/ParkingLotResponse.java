@@ -20,6 +20,7 @@ public class ParkingLotResponse {
     private String imageUrl;
     private String status;
     private int totalSpots;
+    private int maxCapacity;
     private int availableSpots;
     private LocalDateTime createdAt;
 
@@ -37,6 +38,7 @@ public class ParkingLotResponse {
             .imageUrl(lot.getImageUrl())
             .status(lot.getStatus().name())
             .totalSpots(lot.getTotalSpots())
+            .maxCapacity(lot.getMaxCapacity())
             .availableSpots(availableSpots)
             .createdAt(lot.getCreatedAt())
             .build();

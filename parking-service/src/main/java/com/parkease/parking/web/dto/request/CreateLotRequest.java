@@ -33,4 +33,9 @@ public class CreateLotRequest {
     private String closingTime;
 
     private String imageUrl;
+
+    @NotNull(message = "Max capacity is required")
+    @Min(value = 1, message = "Max capacity must be at least 1")
+    @Max(value = 10000, message = "Max capacity cannot exceed 10,000")
+    private Integer maxCapacity;
 }
