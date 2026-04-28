@@ -41,6 +41,7 @@ public class ParkingLotServiceImpl implements ParkingLotService {
                 .imageUrl(request.getImageUrl())
                 .status(ParkingLot.LotStatus.PENDING)
                 .totalSpots(0)
+                .maxCapacity(request.getMaxCapacity())
                 .build();
 
         lotRepository.save(lot);
