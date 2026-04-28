@@ -258,9 +258,16 @@ public class BookingServiceImpl implements BookingService {
         }
 
         booking.setEndTime(request.getNewEndTime());
+
+        LocalDateTime fareStart = booking.getCheckInTime() != null
+                ? booking.getCheckInTime()
+                : booking.getStartTime();
+        double updatedFare = calculateFare(fareStart, request.getNewEndTime(), booking.getPricePerHour());
+        booking.setTotalFare(updatedFare);
+
         bookingRepository.save(booking);
 
-        log.info("Booking extended: id={} newEndTime={}", bookingId, request.getNewEndTime());
+        log.info("Booking extended: id={} newEndTime={} updatedFare={}", bookingId, request.getNewEndTime(), updatedFare);
 
         return BookingResponse.from(booking);
     }

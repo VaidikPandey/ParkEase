@@ -1,5 +1,6 @@
 package com.parkease.auth.web.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.parkease.auth.domain.entity.User;
 import lombok.*;
 
@@ -18,6 +19,7 @@ public class UserProfileResponse {
     private String role;
     private String profilePicUrl;
     private String vehiclePlate;
+    @JsonProperty("isActive")
     private boolean isActive;
     private LocalDateTime createdAt;
 
