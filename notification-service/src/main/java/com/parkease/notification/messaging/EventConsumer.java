@@ -38,7 +38,8 @@ public class EventConsumer {
                 case "booking.expiry"     -> handleExpiry(event);
                 case "booking.reminder"   -> handleExpiryReminder(event);
                 case "payment.completed"  -> handlePaymentCompleted(event);
-                case "payment.refunded"   -> handleRefundProcessed(event);
+                case "payment.refunded"        -> handleRefundProcessed(event);
+                case "lot.capacity.threshold"  -> handleCapacityThreshold(event);
                 default -> log.warn("Unhandled event type: {}", eventType);
             }
         } catch (Exception e) {
@@ -136,6 +137,26 @@ public class EventConsumer {
         notificationService.createFromEvent(userId,
                 Notification.NotificationType.REFUND, title, message, bookingId, "PAYMENT");
         if (email != null) notificationService.sendEmail(email, "[ParkEase] " + title, message);
+    }
+
+    private void handleCapacityThreshold(Map<String, Object> event) {
+        Long   managerId      = toLong(event.get("managerId"));
+        String lotName        = (String) event.get("lotName");
+        Object threshold      = event.get("threshold");
+        Object occupancy      = event.get("occupancyPercent");
+        Object occupied       = event.get("occupiedSpots");
+        Object total          = event.get("totalSpots");
+        Long   lotId          = toLong(event.get("lotId"));
+
+        String title   = lotName + " is " + threshold + "% full";
+        String message = lotName + " has reached " + threshold + "% capacity ("
+                + occupied + "/" + total + " spots occupied, " + occupancy + "%).";
+
+        if (managerId != null) {
+            notificationService.createFromEvent(managerId,
+                    Notification.NotificationType.SYSTEM, title, message, lotId, "LOT");
+        }
+        log.info("Capacity notification sent: lot={} threshold={}%", lotName, threshold);
     }
 
     private Long toLong(Object val) {

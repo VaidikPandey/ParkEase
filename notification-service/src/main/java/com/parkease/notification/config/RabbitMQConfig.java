@@ -48,6 +48,12 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    @Lazy(false)
+    public Binding lotEventsBinding(Queue notificationQueue, TopicExchange bookingExchange) {
+        return BindingBuilder.bind(notificationQueue).to(bookingExchange).with("lot.*");
+    }
+
+    @Bean
     public MessageConverter messageConverter() {
         return new Jackson2JsonMessageConverter();
     }

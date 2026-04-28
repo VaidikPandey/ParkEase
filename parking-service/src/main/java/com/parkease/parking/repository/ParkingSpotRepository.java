@@ -11,5 +11,6 @@ public interface ParkingSpotRepository extends JpaRepository<ParkingSpot, Long> 
     List<ParkingSpot> findByParkingLot_LotIdAndSpotType(Long lotId, ParkingSpot.SpotType type);
     List<ParkingSpot> findByParkingLot_LotIdAndIsEv(Long lotId, boolean isEv);
     int countByParkingLot_LotIdAndStatus(Long lotId, ParkingSpot.SpotStatus status);
+    int countByParkingLot_LotId(Long lotId);
     boolean existsByParkingLot_LotIdAndSpotNumber(Long lotId, String spotNumber);
 }
