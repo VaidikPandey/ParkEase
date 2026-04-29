@@ -24,6 +24,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final HeaderAuthFilter headerAuthFilter;
+    private final JwtCookieFilter jwtCookieFilter;
     private final OAuth2AuthenticationSuccessHandler oAuth2SuccessHandler;
     private final OAuth2AuthenticationFailureHandler oAuth2FailureHandler;
 
@@ -65,7 +66,8 @@ public class SecurityConfig {
                         .authenticationEntryPoint((req, res, e) ->
                                 res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
                 )
-                .addFilterBefore(headerAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtCookieFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(headerAuthFilter, JwtCookieFilter.class);
 
         return http.build();
     }

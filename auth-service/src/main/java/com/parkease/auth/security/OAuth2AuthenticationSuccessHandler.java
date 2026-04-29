@@ -2,6 +2,7 @@ package com.parkease.auth.security;
 
 import com.parkease.auth.domain.entity.User;
 import com.parkease.auth.repository.UserRepository;
+import com.parkease.auth.util.CookieUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class OAuth2AuthenticationSuccessHandler
 
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
+    private final CookieUtil cookieUtil;
 
     @Override
     public void onAuthenticationSuccess(
@@ -31,12 +33,11 @@ public class OAuth2AuthenticationSuccessHandler
 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
 
-        String email     = oAuth2User.getAttribute("email");
-        String name      = oAuth2User.getAttribute("name");
-        String picUrl    = oAuth2User.getAttribute("picture");
-        String googleId  = oAuth2User.getAttribute("sub");
+        String email    = oAuth2User.getAttribute("email");
+        String name     = oAuth2User.getAttribute("name");
+        String picUrl   = oAuth2User.getAttribute("picture");
+        String googleId = oAuth2User.getAttribute("sub");
 
-        // find existing user or create new one — track if newly created
         boolean[] isNew = { false };
         User user = userRepository
                 .findByOauthProviderAndOauthProviderId("google", googleId)
@@ -55,19 +56,16 @@ public class OAuth2AuthenticationSuccessHandler
                             return userRepository.save(newUser);
                         }));
 
-        // generate JWT
-        String accessToken  = jwtUtil.generateAccessToken(
-                user.getEmail(), user.getRole().name(), user.getUserId()
-        );
+        String accessToken  = jwtUtil.generateAccessToken(user.getEmail(), user.getRole().name(), user.getUserId());
         String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
+
+        // Set tokens as HttpOnly cookies — no tokens in the redirect URL
+        response.addHeader("Set-Cookie", cookieUtil.createAccessTokenCookie(accessToken).toString());
+        response.addHeader("Set-Cookie", cookieUtil.createRefreshTokenCookie(refreshToken).toString());
 
         log.info("OAuth2 login successful for: {} (new={})", email, isNew[0]);
 
-        String redirectUrl = "http://localhost:4200/oauth2/success"
-                + "?accessToken=" + accessToken
-                + "&refreshToken=" + refreshToken
-                + "&isNewUser=" + isNew[0];
-
+        String redirectUrl = "http://localhost:4200/oauth2/success?isNewUser=" + isNew[0];
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }
