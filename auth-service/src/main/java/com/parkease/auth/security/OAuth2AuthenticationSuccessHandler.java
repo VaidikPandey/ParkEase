@@ -65,7 +65,12 @@ public class OAuth2AuthenticationSuccessHandler
 
         log.info("OAuth2 login successful for: {} (new={})", email, isNew[0]);
 
-        String redirectUrl = "http://localhost:4200/oauth2/success?isNewUser=" + isNew[0];
+        String redirectUrl = "http://localhost:4200/oauth2/success"
+                + "?isNewUser=" + isNew[0]
+                + "&userId=" + user.getUserId()
+                + "&email=" + java.net.URLEncoder.encode(user.getEmail(), java.nio.charset.StandardCharsets.UTF_8)
+                + "&fullName=" + java.net.URLEncoder.encode(user.getFullName(), java.nio.charset.StandardCharsets.UTF_8)
+                + "&role=" + user.getRole().name();
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }

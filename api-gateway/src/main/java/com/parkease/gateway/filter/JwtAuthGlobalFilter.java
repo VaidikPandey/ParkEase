@@ -47,13 +47,19 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
 
+        // Prefer Authorization header; fall back to HttpOnly access_token cookie
+        String token = null;
         String authHeader = exchange.getRequest().getHeaders().getFirst("Authorization");
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return unauthorizedResponse(exchange, "Missing Authorization header");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        } else {
+            var cookie = exchange.getRequest().getCookies().getFirst("access_token");
+            if (cookie != null) token = cookie.getValue();
         }
 
-        String token = authHeader.substring(7);
+        if (token == null) {
+            return unauthorizedResponse(exchange, "Missing Authorization header");
+        }
 
         if (!jwtUtil.isTokenValid(token)) {
             return unauthorizedResponse(exchange, "Invalid or expired token");
