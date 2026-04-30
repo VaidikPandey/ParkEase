@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -109,6 +110,12 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public void deleteAllByRecipient(Long recipientId) {
+        notificationRepository.deleteAllByRecipientId(recipientId);
+        log.info("Deleted all notifications for recipientId={}", recipientId);
+    }
+
+    @Override
     public void deleteNotification(Long notificationId, Long callerId, boolean isAdmin) {
         Notification n = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new EntityNotFoundException("Notification not found: " + notificationId));
@@ -140,6 +147,26 @@ public class NotificationServiceImpl implements NotificationService {
             log.info("Email sent to={} subject={}", to, subject);
         } catch (Exception e) {
             log.error("Failed to send email to={}: {}", to, e.getMessage());
+        }
+    }
+
+    @Override
+    public void sendHtmlEmail(String to, String subject, String htmlBody) {
+        if (!mailEnabled) {
+            log.info("Email disabled. Would send HTML to={} subject={}", to, subject);
+            return;
+        }
+        try {
+            var mime = mailSender.createMimeMessage();
+            var helper = new MimeMessageHelper(mime, true, "UTF-8");
+            helper.setFrom(mailFrom);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(htmlBody, true);
+            mailSender.send(mime);
+            log.info("HTML email sent to={} subject={}", to, subject);
+        } catch (Exception e) {
+            log.error("Failed to send HTML email to={}: {}", to, e.getMessage());
         }
     }
 

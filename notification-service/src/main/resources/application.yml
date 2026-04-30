@@ -9,8 +9,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://localhost:5432/notification_db
-    username: postgres
-    password: postgres
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
     hikari:
       maximum-pool-size: 5
       minimum-idle: 2
@@ -26,8 +26,8 @@ spring:
   rabbitmq:
     host: localhost
     port: 5672
-    username: rabbitmq
-    password: rabbitmq123
+    username: ${RABBITMQ_USER:rabbitmq}
+    password: ${RABBITMQ_PASSWORD:rabbitmq123}
     listener:
       simple:
         retry:
@@ -38,7 +38,7 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:noreply@parkease.com}
+    username: ${MAIL_USERNAME:pandeyvaidik04@gmail.com}
     password: ${MAIL_PASSWORD:changeme}
     properties:
       mail:
@@ -48,8 +48,8 @@ spring:
             enable: true
 
 mail:
-  enabled: ${MAIL_ENABLED:false}
-  from: ${MAIL_FROM:noreply@parkease.com}
+  enabled: ${MAIL_ENABLED:true}
+  from: ${MAIL_FROM:pandeyvaidik04@gmail.com}
 
 eureka:
   client:
@@ -66,7 +66,7 @@ springdoc:
     tags-sorter: alpha
 
 jwt:
-  secret: MySuperLongJwtSecretKeyForLocalDevelopmentOnly2026MakeItAtLeast64CharsLong!
+  secret: ${JWT_SECRET:MySuperLongJwtSecretKeyForLocalDevelopmentOnly2026MakeItAtLeast64CharsLong!}
 
 management:
   endpoints:

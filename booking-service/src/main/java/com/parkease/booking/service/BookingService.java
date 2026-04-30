@@ -17,4 +17,6 @@ public interface BookingService {
     List<BookingResponse> getAllBookings();
     BookingResponse forceCheckout(Long bookingId);
     void autoCancelExpiredBookings();
+    void deleteBookingsByDriver(Long driverId);
+    void deleteBookingsByLot(Long lotId);
 }

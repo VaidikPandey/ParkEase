@@ -40,7 +40,7 @@ spring:
             - Path=/api/v1/analytics/**
 
 jwt:
-  secret: MySuperLongJwtSecretKeyForLocalDevelopmentOnly2026MakeItAtLeast64CharsLong!
+  secret: ${JWT_SECRET:MySuperLongJwtSecretKeyForLocalDevelopmentOnly2026MakeItAtLeast64CharsLong!}
 
 eureka:
   client:

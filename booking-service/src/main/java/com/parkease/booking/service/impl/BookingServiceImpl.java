@@ -158,9 +158,10 @@ public class BookingServiceImpl implements BookingService {
         booking.setCheckOutTime(checkOutTime);
         booking.setStatus(Booking.BookingStatus.CHECKED_OUT);
 
-        // calculate fare
-        double fare = calculateFare(booking.getCheckInTime(), checkOutTime,
-                booking.getPricePerHour());
+        // charge at least the originally booked amount (early checkout doesn't get a refund)
+        double bookedFare = calculateFare(booking.getStartTime(), booking.getEndTime(), booking.getPricePerHour());
+        double actualFare = calculateFare(booking.getCheckInTime(), checkOutTime, booking.getPricePerHour());
+        double fare = Math.max(bookedFare, actualFare);
         booking.setTotalFare(fare);
 
         bookingRepository.save(booking);
@@ -331,8 +332,9 @@ public class BookingServiceImpl implements BookingService {
         booking.setCheckOutTime(now);
         booking.setStatus(Booking.BookingStatus.CHECKED_OUT);
 
-        double fare = calculateFare(booking.getCheckInTime(), now,
-                booking.getPricePerHour());
+        double bookedFare = calculateFare(booking.getStartTime(), booking.getEndTime(), booking.getPricePerHour());
+        double actualFare = calculateFare(booking.getCheckInTime(), now, booking.getPricePerHour());
+        double fare = Math.max(bookedFare, actualFare);
         booking.setTotalFare(fare);
 
         bookingRepository.save(booking);
@@ -383,6 +385,22 @@ public class BookingServiceImpl implements BookingService {
             bookingRepository.save(booking);
             log.info("Sent expiry reminder for booking: id={}", booking.getBookingId());
         }
+    }
+
+    // ── Admin Cascade Delete
+
+    @Override
+    public void deleteBookingsByDriver(Long driverId) {
+        List<Booking> bookings = bookingRepository.findByDriverId(driverId);
+        bookingRepository.deleteAll(bookings);
+        log.info("Deleted {} bookings for driverId={}", bookings.size(), driverId);
+    }
+
+    @Override
+    public void deleteBookingsByLot(Long lotId) {
+        List<Booking> bookings = bookingRepository.findByLotId(lotId);
+        bookingRepository.deleteAll(bookings);
+        log.info("Deleted {} bookings for lotId={}", bookings.size(), lotId);
     }
 
     // ── Private Helpers

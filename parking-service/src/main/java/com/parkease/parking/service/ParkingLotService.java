@@ -19,4 +19,5 @@ public interface ParkingLotService {
     List<ParkingLotResponse> getPendingLots();
     List<ParkingLotResponse> getAllLots();
     List<ParkingLotResponse> getApprovedLots();
+    void deleteLotsByManager(Long managerId);
 }

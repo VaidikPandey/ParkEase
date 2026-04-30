@@ -9,8 +9,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://localhost:5432/parking_db
-    username: postgres
-    password: postgres
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
     hikari:
       maximum-pool-size: 5
       minimum-idle: 2
@@ -27,13 +27,13 @@ spring:
     redis:
       host: localhost
       port: 6379
-      password: redis123
+      password: ${REDIS_PASSWORD:redis123}
 
   rabbitmq:
     host: localhost
     port: 5672
-    username: rabbitmq
-    password: rabbitmq123
+    username: ${RABBITMQ_USER:rabbitmq}
+    password: ${RABBITMQ_PASSWORD:rabbitmq123}
     listener:
       simple:
         retry:
@@ -42,7 +42,7 @@ spring:
           max-attempts: 3
 
 jwt:
-  secret: MySuperLongJwtSecretKeyForLocalDevelopmentOnly2026MakeItAtLeast64CharsLong!
+  secret: ${JWT_SECRET:MySuperLongJwtSecretKeyForLocalDevelopmentOnly2026MakeItAtLeast64CharsLong!}
 
 eureka:
   client:

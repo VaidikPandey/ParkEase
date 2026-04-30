@@ -156,4 +156,20 @@ public class BookingResource {
     public ResponseEntity<BookingResponse> forceCheckout(@PathVariable Long bookingId) {
         return ResponseEntity.ok(bookingService.forceCheckout(bookingId));
     }
+
+    @DeleteMapping("/admin/driver/{driverId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Delete all bookings for a driver — ADMIN only, used when deleting a user account")
+    public ResponseEntity<Void> deleteBookingsByDriver(@PathVariable Long driverId) {
+        bookingService.deleteBookingsByDriver(driverId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/admin/lot/{lotId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Delete all bookings for a lot — ADMIN only, used when deleting a lot")
+    public ResponseEntity<Void> deleteBookingsByLot(@PathVariable Long lotId) {
+        bookingService.deleteBookingsByLot(lotId);
+        return ResponseEntity.noContent().build();
+    }
 }

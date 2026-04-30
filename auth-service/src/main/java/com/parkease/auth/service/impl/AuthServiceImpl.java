@@ -148,10 +148,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void deactivateAccount(Long userId) {
-        User user = findUserById(userId);
-        user.setActive(false);
-        userRepository.save(user);
-        log.info("Account deactivated: userId={}", userId);
+        findUserById(userId);
+        userRepository.deleteById(userId);
+        log.info("Account permanently deleted: userId={}", userId);
     }
 
     // ── Select Role (OAuth onboarding) ────────────────────────────────────────

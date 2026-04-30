@@ -9,8 +9,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://localhost:5432/analytics_db
-    username: postgres
-    password: postgres
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
     hikari:
       maximum-pool-size: 5
       minimum-idle: 2
@@ -26,8 +26,8 @@ spring:
   rabbitmq:
     host: localhost
     port: 5672
-    username: rabbitmq
-    password: rabbitmq123
+    username: ${RABBITMQ_USER:rabbitmq}
+    password: ${RABBITMQ_PASSWORD:rabbitmq123}
     listener:
       simple:
         retry:
@@ -50,7 +50,7 @@ springdoc:
     tags-sorter: alpha
 
 jwt:
-  secret: MySuperLongJwtSecretKeyForLocalDevelopmentOnly2026MakeItAtLeast64CharsLong!
+  secret: ${JWT_SECRET:MySuperLongJwtSecretKeyForLocalDevelopmentOnly2026MakeItAtLeast64CharsLong!}
 
 services:
   payment-url: http://localhost:8084
