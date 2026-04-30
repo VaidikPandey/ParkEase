@@ -9,8 +9,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://localhost:5432/auth_db
-    username: postgres
-    password: postgres
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
     hikari:
       maximum-pool-size: 5
       minimum-idle: 2
@@ -28,7 +28,7 @@ spring:
     redis:
       host: localhost
       port: 6379
-      password: redis123
+      password: ${REDIS_PASSWORD:redis123}
 
   security:
     oauth2:
@@ -41,9 +41,9 @@ spring:
             redirect-uri: "{baseUrl}/oauth2/callback/{registrationId}"
 
 jwt:
-  secret: MySuperLongJwtSecretKeyForLocalDevelopmentOnly2026MakeItAtLeast64CharsLong!
-  expiry-ms: 86400000
-  refresh-expiry-ms: 604800000
+  secret: ${JWT_SECRET:MySuperLongJwtSecretKeyForLocalDevelopmentOnly2026MakeItAtLeast64CharsLong!}
+  expiry-ms: ${JWT_EXPIRY_MS:86400000}
+  refresh-expiry-ms: ${JWT_REFRESH_EXPIRY_MS:604800000}
 
 eureka:
   client:

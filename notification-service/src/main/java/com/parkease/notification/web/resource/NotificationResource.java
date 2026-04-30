@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/v1/notifications")
@@ -110,6 +111,28 @@ public class NotificationResource {
         boolean isAdmin = hasRole(auth, "ADMIN");
         notificationService.deleteNotification(notificationId, callerId, isAdmin);
         return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/admin/recipient/{recipientId}/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Delete all notifications for a recipient — ADMIN")
+    public ResponseEntity<Void> deleteAllByRecipient(@PathVariable Long recipientId) {
+        notificationService.deleteAllByRecipient(recipientId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/admin/email")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Send a direct email — ADMIN")
+    public ResponseEntity<Map<String, String>> sendEmail(@RequestBody Map<String, String> body) {
+        String to      = body.get("to");
+        String subject = body.get("subject");
+        String content = body.get("body");
+        if (to == null || subject == null || content == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "to, subject, body are required"));
+        }
+        notificationService.sendEmail(to, subject, content);
+        return ResponseEntity.ok(Map.of("message", "Email sent to " + to));
     }
 
     @GetMapping("/admin/all")

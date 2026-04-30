@@ -1,5 +1,6 @@
 package com.parkease.auth.web.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.parkease.auth.domain.entity.Vehicle;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,6 +15,7 @@ public class VehicleResponse {
     private Long userId;
     private String plate;
     private String vehicleType;
+    @JsonProperty("ev")
     private boolean isEv;
     private String nickname;
     private LocalDateTime createdAt;

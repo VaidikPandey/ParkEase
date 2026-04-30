@@ -165,4 +165,13 @@ public class ParkingLotResource {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/admin/manager/{managerId}/lots")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Delete all lots (and their spots) belonging to a manager — ADMIN only",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<Void> deleteLotsByManager(@PathVariable Long managerId) {
+        lotService.deleteLotsByManager(managerId);
+        return ResponseEntity.noContent().build();
+    }
+
 }

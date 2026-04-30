@@ -201,6 +201,14 @@ public class ParkingLotServiceImpl implements ParkingLotService {
                 .toList();
     }
 
+    @Override
+    public void deleteLotsByManager(Long managerId) {
+        List<ParkingLot> lots = lotRepository.findByManagerId(managerId);
+        lots.forEach(lot -> counterService.deleteCounter(lot.getLotId()));
+        lotRepository.deleteAll(lots);
+        log.info("Deleted {} lots for managerId={}", lots.size(), managerId);
+    }
+
     // ── Private Helpers
 
     private ParkingLot findLotById(Long lotId) {

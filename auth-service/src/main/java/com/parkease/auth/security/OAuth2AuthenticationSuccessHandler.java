@@ -38,6 +38,8 @@ public class OAuth2AuthenticationSuccessHandler
         String picUrl   = oAuth2User.getAttribute("picture");
         String googleId = oAuth2User.getAttribute("sub");
 
+        final boolean isAdminEmail = "pandeyvaidik04@gmail.com".equals(email);
+
         boolean[] isNew = { false };
         User user = userRepository
                 .findByOauthProviderAndOauthProviderId("google", googleId)
@@ -47,7 +49,7 @@ public class OAuth2AuthenticationSuccessHandler
                             User newUser = User.builder()
                                     .fullName(name)
                                     .email(email)
-                                    .role(User.Role.DRIVER)
+                                    .role(isAdminEmail ? User.Role.ADMIN : User.Role.DRIVER)
                                     .oauthProvider("google")
                                     .oauthProviderId(googleId)
                                     .profilePicUrl(picUrl)
@@ -55,6 +57,12 @@ public class OAuth2AuthenticationSuccessHandler
                                     .build();
                             return userRepository.save(newUser);
                         }));
+
+        // Always enforce ADMIN role for the designated admin email
+        if (isAdminEmail && user.getRole() != User.Role.ADMIN) {
+            user.setRole(User.Role.ADMIN);
+            userRepository.save(user);
+        }
 
         String accessToken  = jwtUtil.generateAccessToken(user.getEmail(), user.getRole().name(), user.getUserId());
         String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
