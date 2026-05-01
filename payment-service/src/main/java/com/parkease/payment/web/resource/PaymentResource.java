@@ -23,6 +23,13 @@ public class PaymentResource {
 
     private final PaymentService paymentService;
 
+    @PostMapping("/create-order")
+    @Operation(summary = "Create a Razorpay order and return orderId + keyId")
+    public ResponseEntity<RazorpayOrderResponse> createOrder(
+            @Valid @RequestBody RazorpayOrderRequest request) {
+        return ResponseEntity.ok(paymentService.createOrder(request));
+    }
+
     @PostMapping
     @Operation(summary = "Process a payment for a booking")
     public ResponseEntity<PaymentResponse> processPayment(

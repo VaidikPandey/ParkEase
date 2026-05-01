@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface PaymentService {
+    RazorpayOrderResponse createOrder(RazorpayOrderRequest request);
     PaymentResponse processPayment(PaymentRequest request, Long callerId, boolean isAdmin);
     PaymentResponse getByBookingId(Long bookingId, Long callerId, boolean isAdmin);
     List<PaymentResponse> getByUserId(Long userId);

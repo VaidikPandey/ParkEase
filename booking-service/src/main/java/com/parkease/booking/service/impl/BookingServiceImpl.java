@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -101,7 +103,7 @@ public class BookingServiceImpl implements BookingService {
 
             // publish event to RabbitMQ
             publishEvent(booking, request.getDriverEmail(),
-                    RabbitMQConfig.BOOKING_CONFIRMED_KEY);
+                    RabbitMQConfig.BOOKING_PENDING_KEY);
 
             return BookingResponse.from(booking);
 
@@ -158,10 +160,8 @@ public class BookingServiceImpl implements BookingService {
         booking.setCheckOutTime(checkOutTime);
         booking.setStatus(Booking.BookingStatus.CHECKED_OUT);
 
-        // charge at least the originally booked amount (early checkout doesn't get a refund)
-        double bookedFare = calculateFare(booking.getStartTime(), booking.getEndTime(), booking.getPricePerHour());
-        double actualFare = calculateFare(booking.getCheckInTime(), checkOutTime, booking.getPricePerHour());
-        double fare = Math.max(bookedFare, actualFare);
+        // charge based on actual time parked (early checkout = lower fare)
+        double fare = calculateFare(booking.getCheckInTime(), checkOutTime, booking.getPricePerHour());
         booking.setTotalFare(fare);
 
         bookingRepository.save(booking);
@@ -332,9 +332,7 @@ public class BookingServiceImpl implements BookingService {
         booking.setCheckOutTime(now);
         booking.setStatus(Booking.BookingStatus.CHECKED_OUT);
 
-        double bookedFare = calculateFare(booking.getStartTime(), booking.getEndTime(), booking.getPricePerHour());
-        double actualFare = calculateFare(booking.getCheckInTime(), now, booking.getPricePerHour());
-        double fare = Math.max(bookedFare, actualFare);
+        double fare = calculateFare(booking.getCheckInTime(), now, booking.getPricePerHour());
         booking.setTotalFare(fare);
 
         bookingRepository.save(booking);
@@ -403,6 +401,41 @@ public class BookingServiceImpl implements BookingService {
         log.info("Deleted {} bookings for lotId={}", bookings.size(), lotId);
     }
 
+    // ── Payment Completed Event
+
+    @RabbitListener(queues = RabbitMQConfig.PAYMENT_EVENTS_QUEUE)
+    public void handlePaymentCompleted(Map<String, Object> event) {
+        Long bookingId = toLong(event.get("bookingId"));
+        Double amount = toDouble(event.get("amount"));
+
+        if (bookingId == null) {
+            log.warn("Ignoring payment.completed event without bookingId");
+            return;
+        }
+
+        Booking booking = findBookingById(bookingId);
+
+        if (booking.getStatus() == Booking.BookingStatus.CONFIRMED) {
+            log.info("Booking already confirmed: id={}", bookingId);
+            return;
+        }
+
+        if (booking.getStatus() != Booking.BookingStatus.PENDING) {
+            log.warn("Ignoring payment.completed for bookingId={} with status={}",
+                    bookingId, booking.getStatus());
+            return;
+        }
+
+        booking.setStatus(Booking.BookingStatus.CONFIRMED);
+        if (amount != null) {
+            booking.setTotalFare(amount);
+        }
+        bookingRepository.save(booking);
+
+        log.info("Booking confirmed after payment: bookingId={} amount={}", bookingId, amount);
+        publishEvent(booking, booking.getDriverEmail(), RabbitMQConfig.BOOKING_CONFIRMED_KEY);
+    }
+
     // ── Private Helpers
 
     private Booking findBookingById(Long bookingId) {
@@ -428,6 +461,26 @@ public class BookingServiceImpl implements BookingService {
         return fare;
     }
 
+    private Long toLong(Object value) {
+        if (value == null) return null;
+        if (value instanceof Number number) return number.longValue();
+        try {
+            return Long.parseLong(value.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private Double toDouble(Object value) {
+        if (value == null) return null;
+        if (value instanceof Number number) return number.doubleValue();
+        try {
+            return Double.parseDouble(value.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     private void publishEvent(Booking booking, String driverEmail, String routingKey) {
         try {
             BookingEvent event = BookingEvent.builder()
@@ -442,6 +495,7 @@ public class BookingServiceImpl implements BookingService {
                     .bookingType(booking.getBookingType() != null ? booking.getBookingType().name() : null)
                     .startTime(booking.getStartTime())
                     .endTime(booking.getEndTime())
+                    .pricePerHour(booking.getPricePerHour())
                     .checkInTime(booking.getCheckInTime())
                     .checkOutTime(booking.getCheckOutTime())
                     .totalFare(booking.getTotalFare())

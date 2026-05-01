@@ -18,8 +18,8 @@ public interface NotificationService {
     void deleteNotification(Long notificationId, Long callerId, boolean isAdmin);
     void deleteAllByRecipient(Long recipientId);
     List<NotificationResponse> getAll();
-    void sendEmail(String to, String subject, String body);
-    void sendHtmlEmail(String to, String subject, String htmlBody);
+    boolean sendEmail(String to, String subject, String body);
+    boolean sendHtmlEmail(String to, String subject, String htmlBody);
     NotificationResponse createFromEvent(Long recipientId, Notification.NotificationType type,
                                          String title, String message, Long relatedId, String relatedType);
 }

@@ -31,6 +31,7 @@ public class EventConsumer {
             }
 
             switch (eventType) {
+                case "booking.pending"    -> handleBookingPending(event);
                 case "booking.confirmed"  -> handleBookingConfirmed(event);
                 case "booking.checkin"    -> handleCheckIn(event);
                 case "booking.checkout"   -> handleCheckOut(event);
@@ -44,6 +45,23 @@ public class EventConsumer {
             }
         } catch (Exception e) {
             log.error("Error processing event: {}", e.getMessage(), e);
+        }
+    }
+
+    private void handleBookingPending(Map<String, Object> event) {
+        Long   driverId   = toLong(event.get("driverId"));
+        Long   bookingId  = toLong(event.get("bookingId"));
+        String email      = (String) event.get("driverEmail");
+        String spotNumber = str(event.get("spotNumber"));
+
+        String title   = "Spot Reserved — Complete Payment #" + bookingId;
+        String message = "Spot " + spotNumber + " is reserved for booking #" + bookingId + ". Please complete payment to confirm.";
+
+        notificationService.createFromEvent(driverId,
+                Notification.NotificationType.BOOKING, title, message, bookingId, "BOOKING");
+
+        if (email != null) {
+            notificationService.sendEmail(email, "[ParkEase] Complete Payment — Booking #" + bookingId, message);
         }
     }
 

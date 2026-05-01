@@ -46,6 +46,9 @@ public class Payment {
     @Column(length = 500)
     private String description;
 
+    private String razorpayPaymentId;
+    private String razorpayOrderId;
+
     private LocalDateTime paidAt;
     private LocalDateTime refundedAt;
 
