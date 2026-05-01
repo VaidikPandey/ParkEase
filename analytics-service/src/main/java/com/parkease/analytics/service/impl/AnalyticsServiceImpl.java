@@ -6,10 +6,9 @@ import com.parkease.analytics.service.AnalyticsService;
 import com.parkease.analytics.web.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -21,10 +20,7 @@ import java.util.List;
 public class AnalyticsServiceImpl implements AnalyticsService {
 
     private final BookingAnalyticsRepository repository;
-    private final RestTemplate restTemplate;
-
-    @Value("${services.payment-url}")
-    private String paymentServiceUrl;
+    private final WebClient paymentWebClient;
 
     private static final DateTimeFormatter FMT = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
@@ -130,18 +126,18 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
     @Override
     public Object getRevenue(Long lotId, LocalDateTime from, LocalDateTime to, Long userId, String role) {
-        String url = paymentServiceUrl + "/api/v1/payments/admin/revenue/lot/" + lotId
-                + "?from=" + from.format(FMT)
-                + "&to=" + to.format(FMT);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("X-User-Id", String.valueOf(userId));
-        headers.set("X-User-Role", role);
-
         try {
-            ResponseEntity<Object> response = restTemplate.exchange(
-                    url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
-            return response.getBody();
+            return paymentWebClient.get()
+                    .uri("/api/v1/payments/admin/revenue/lot/{lotId}?from={from}&to={to}",
+                            lotId, from.format(FMT), to.format(FMT))
+                    .header("X-User-Id", String.valueOf(userId))
+                    .header("X-User-Role", role)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, response ->
+                            response.bodyToMono(String.class).map(body ->
+                                    new IllegalStateException("Payment service error: " + body)))
+                    .bodyToMono(Object.class)
+                    .block();
         } catch (Exception e) {
             log.error("Failed to fetch revenue from payment-service for lot {}: {}", lotId, e.getMessage());
             throw new IllegalStateException("Revenue data unavailable: " + e.getMessage());

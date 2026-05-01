@@ -51,55 +51,64 @@ public class BookingEventConsumer {
     }
 
     // booking confirmed → spot RESERVED, decrement counter
-    private void reserveSpot(Map<String, Object> event) {
+    @org.springframework.transaction.annotation.Transactional
+    void reserveSpot(Map<String, Object> event) {
         Long spotId = toLong(event.get("spotId"));
         Long lotId  = toLong(event.get("lotId"));
         if (spotId == null || lotId == null) return;
 
-        spotRepository.findById(spotId).ifPresent(spot -> {
-            if (spot.getStatus() == ParkingSpot.SpotStatus.AVAILABLE) {
-                int prevOccupied = countOccupied(lotId);
-                spot.setStatus(ParkingSpot.SpotStatus.RESERVED);
-                spotRepository.save(spot);
-                counterService.decrement(lotId);
-                log.info("Spot {} → RESERVED (booking confirmed)", spotId);
-                checkCapacityThresholds(lotId, prevOccupied, prevOccupied + 1);
-            }
-        });
+        int prevOccupied = countOccupied(lotId);
+        int updated = spotRepository.updateStatusIfMatches(
+                spotId, ParkingSpot.SpotStatus.AVAILABLE, ParkingSpot.SpotStatus.RESERVED);
+
+        if (updated == 0) {
+            log.warn("Spot {} was not AVAILABLE — skipping reserve (duplicate or late event)", spotId);
+            return;
+        }
+        counterService.decrement(lotId);
+        log.info("Spot {} → RESERVED (booking confirmed)", spotId);
+        checkCapacityThresholds(lotId, prevOccupied, prevOccupied + 1);
     }
 
-    // check-in → spot OCCUPIED (already removed from counter on reserve)
-    private void occupySpot(Map<String, Object> event) {
+    // check-in → spot OCCUPIED (counter already decremented on reserve)
+    @org.springframework.transaction.annotation.Transactional
+    void occupySpot(Map<String, Object> event) {
         Long spotId = toLong(event.get("spotId"));
         Long lotId  = toLong(event.get("lotId"));
         if (spotId == null) return;
 
-        spotRepository.findById(spotId).ifPresent(spot -> {
-            if (spot.getStatus() == ParkingSpot.SpotStatus.RESERVED) {
-                int prevOccupied = lotId != null ? countOccupied(lotId) : 0;
-                spot.setStatus(ParkingSpot.SpotStatus.OCCUPIED);
-                spotRepository.save(spot);
-                log.info("Spot {} → OCCUPIED (check-in)", spotId);
-                if (lotId != null) checkCapacityThresholds(lotId, prevOccupied, prevOccupied + 1);
-            }
-        });
+        int prevOccupied = lotId != null ? countOccupied(lotId) : 0;
+        int updated = spotRepository.updateStatusIfMatches(
+                spotId, ParkingSpot.SpotStatus.RESERVED, ParkingSpot.SpotStatus.OCCUPIED);
+
+        if (updated == 0) {
+            log.warn("Spot {} was not RESERVED — skipping occupy (duplicate or late event)", spotId);
+            return;
+        }
+        log.info("Spot {} → OCCUPIED (check-in)", spotId);
+        if (lotId != null) checkCapacityThresholds(lotId, prevOccupied, prevOccupied + 1);
     }
 
     // checkout / cancel / expiry → spot AVAILABLE, increment counter
-    private void releaseSpot(Map<String, Object> event) {
+    @org.springframework.transaction.annotation.Transactional
+    void releaseSpot(Map<String, Object> event) {
         Long spotId = toLong(event.get("spotId"));
         Long lotId  = toLong(event.get("lotId"));
         if (spotId == null || lotId == null) return;
 
-        spotRepository.findById(spotId).ifPresent(spot -> {
-            ParkingSpot.SpotStatus prev = spot.getStatus();
-            if (prev == ParkingSpot.SpotStatus.RESERVED || prev == ParkingSpot.SpotStatus.OCCUPIED) {
-                spot.setStatus(ParkingSpot.SpotStatus.AVAILABLE);
-                spotRepository.save(spot);
-                counterService.increment(lotId);
-                log.info("Spot {} → AVAILABLE ({})", spotId, event.get("eventType"));
-            }
-        });
+        int prevOccupied = countOccupied(lotId);
+        int updated = spotRepository.updateStatusIfMatchesAny(
+                spotId,
+                List.of(ParkingSpot.SpotStatus.RESERVED, ParkingSpot.SpotStatus.OCCUPIED),
+                ParkingSpot.SpotStatus.AVAILABLE);
+
+        if (updated == 0) {
+            log.warn("Spot {} was already AVAILABLE — skipping release (duplicate or late event)", spotId);
+            return;
+        }
+        counterService.increment(lotId);
+        log.info("Spot {} → AVAILABLE ({})", spotId, event.get("eventType"));
+        checkCapacityThresholds(lotId, prevOccupied, prevOccupied - 1);
     }
 
     private void checkCapacityThresholds(Long lotId, int prevOccupied, int currOccupied) {
