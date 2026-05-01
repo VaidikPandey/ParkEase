@@ -132,10 +132,10 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void sendEmail(String to, String subject, String body) {
+    public boolean sendEmail(String to, String subject, String body) {
         if (!mailEnabled) {
             log.info("Email disabled. Would send to={} subject={}", to, subject);
-            return;
+            return false;
         }
         try {
             SimpleMailMessage msg = new SimpleMailMessage();
@@ -145,16 +145,18 @@ public class NotificationServiceImpl implements NotificationService {
             msg.setText(body);
             mailSender.send(msg);
             log.info("Email sent to={} subject={}", to, subject);
+            return true;
         } catch (Exception e) {
             log.error("Failed to send email to={}: {}", to, e.getMessage());
+            return false;
         }
     }
 
     @Override
-    public void sendHtmlEmail(String to, String subject, String htmlBody) {
+    public boolean sendHtmlEmail(String to, String subject, String htmlBody) {
         if (!mailEnabled) {
             log.info("Email disabled. Would send HTML to={} subject={}", to, subject);
-            return;
+            return false;
         }
         try {
             var mime = mailSender.createMimeMessage();
@@ -165,8 +167,10 @@ public class NotificationServiceImpl implements NotificationService {
             helper.setText(htmlBody, true);
             mailSender.send(mime);
             log.info("HTML email sent to={} subject={}", to, subject);
+            return true;
         } catch (Exception e) {
             log.error("Failed to send HTML email to={}: {}", to, e.getMessage());
+            return false;
         }
     }
 

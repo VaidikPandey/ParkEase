@@ -131,7 +131,11 @@ public class NotificationResource {
         if (to == null || subject == null || content == null) {
             return ResponseEntity.badRequest().body(Map.of("message", "to, subject, body are required"));
         }
-        notificationService.sendEmail(to, subject, content);
+        boolean sent = notificationService.sendEmail(to, subject, content);
+        if (!sent) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body(Map.of("message", "Email delivery failed. Check notification-service SMTP configuration/logs."));
+        }
         return ResponseEntity.ok(Map.of("message", "Email sent to " + to));
     }
 

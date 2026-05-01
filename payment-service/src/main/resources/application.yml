@@ -42,6 +42,10 @@ eureka:
 jwt:
   secret: ${JWT_SECRET:MySuperLongJwtSecretKeyForLocalDevelopmentOnly2026MakeItAtLeast64CharsLong!}
 
+razorpay:
+  key-id: ${RAZORPAY_KEY_ID:rzp_test_replace}
+  key-secret: ${RAZORPAY_KEY_SECRET:replace}
+
 management:
   endpoints:
     web:

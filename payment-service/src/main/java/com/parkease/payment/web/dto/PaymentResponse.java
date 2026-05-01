@@ -16,6 +16,7 @@ public class PaymentResponse {
     private Payment.PaymentStatus status;
     private Payment.PaymentMode mode;
     private String transactionId;
+    private String razorpayPaymentId;
     private String currency;
     private String description;
     private LocalDateTime paidAt;

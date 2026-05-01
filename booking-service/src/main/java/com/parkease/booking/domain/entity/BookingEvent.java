@@ -21,6 +21,7 @@ public class BookingEvent {
     private String bookingType;        // PRE_BOOKING or WALK_IN
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private Double pricePerHour;
     private LocalDateTime checkInTime;
     private LocalDateTime checkOutTime;
     private Double totalFare;

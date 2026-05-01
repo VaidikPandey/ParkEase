@@ -18,14 +18,17 @@ public class RabbitMQConfig {
 
     // ── Routing Keys
     public static final String BOOKING_CONFIRMED_KEY  = "booking.confirmed";
+    public static final String BOOKING_PENDING_KEY    = "booking.pending";
     public static final String BOOKING_CANCELLED_KEY  = "booking.cancelled";
     public static final String BOOKING_CHECKIN_KEY    = "booking.checkin";
     public static final String BOOKING_CHECKOUT_KEY   = "booking.checkout";
     public static final String BOOKING_EXPIRY_KEY     = "booking.expiry";
     public static final String BOOKING_REMINDER_KEY   = "booking.reminder";
+    public static final String PAYMENT_COMPLETED_KEY  = "payment.completed";
 
     // ── Queues, a mailbox. notification-service listens to this queue
     public static final String NOTIFICATION_QUEUE = "parkease.notification.queue";
+    public static final String PAYMENT_EVENTS_QUEUE = "parkease.booking.payment-events.queue";
 
     @Bean
     @Lazy(false)
@@ -53,6 +56,21 @@ public class RabbitMQConfig {
                 .bind(notificationQueue)
                 .to(bookingExchange)
                 .with("booking.*");
+    }
+
+    @Bean
+    @Lazy(false)
+    public Queue paymentEventsQueue() {
+        return QueueBuilder.durable(PAYMENT_EVENTS_QUEUE).build();
+    }
+
+    @Bean
+    @Lazy(false)
+    public Binding paymentCompletedBinding(Queue paymentEventsQueue, TopicExchange bookingExchange) {
+        return BindingBuilder
+                .bind(paymentEventsQueue)
+                .to(bookingExchange)
+                .with(PAYMENT_COMPLETED_KEY);
     }
 
     @Bean

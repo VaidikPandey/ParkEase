@@ -7,16 +7,25 @@ import com.parkease.payment.messaging.PaymentEventPublisher;
 import com.parkease.payment.repository.PaymentRepository;
 import com.parkease.payment.service.PaymentService;
 import com.parkease.payment.web.dto.*;
+import com.razorpay.Order;
+import com.razorpay.RazorpayClient;
+import com.razorpay.RazorpayException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,9 +38,40 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final PaymentEventPublisher eventPublisher;
+    private final RazorpayClient razorpayClient;
+
+    @Value("${razorpay.key-id}")
+    private String razorpayKeyId;
+
+    @Value("${razorpay.key-secret}")
+    private String razorpayKeySecret;
 
     private static final DateTimeFormatter DISPLAY_FMT =
             DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+
+    @Override
+    public RazorpayOrderResponse createOrder(RazorpayOrderRequest request) {
+        try {
+            JSONObject options = new JSONObject();
+            options.put("amount", (int)(request.getAmount() * 100));
+            options.put("currency", "INR");
+            options.put("receipt", "booking-" + request.getBookingId());
+            options.put("payment_capture", 1);
+
+            Order order = razorpayClient.orders.create(options);
+            log.info("Razorpay order created: {} for bookingId={}", order.get("id"), request.getBookingId());
+
+            return RazorpayOrderResponse.builder()
+                    .orderId(order.get("id"))
+                    .amount(order.get("amount"))
+                    .currency(order.get("currency"))
+                    .keyId(razorpayKeyId)
+                    .build();
+        } catch (RazorpayException e) {
+            log.error("Failed to create Razorpay order: {}", e.getMessage());
+            throw new IllegalStateException("Payment gateway error: " + e.getMessage());
+        }
+    }
 
     @Override
     public PaymentResponse processPayment(PaymentRequest request, Long callerId, boolean isAdmin) {
@@ -43,6 +83,12 @@ public class PaymentServiceImpl implements PaymentService {
                             + " | TxnId: " + p.getTransactionId());
                 });
 
+        if (request.getRazorpayPaymentId() != null
+                && request.getRazorpayOrderId() != null
+                && request.getRazorpaySignature() != null) {
+            verifyRazorpaySignature(request.getRazorpayOrderId(), request.getRazorpayPaymentId(), request.getRazorpaySignature());
+        }
+
         Payment payment = Payment.builder()
                 .bookingId(request.getBookingId())
                 .userId(callerId)
@@ -51,6 +97,8 @@ public class PaymentServiceImpl implements PaymentService {
                 .mode(request.getMode())
                 .status(Payment.PaymentStatus.PAID)
                 .transactionId(generateTransactionId())
+                .razorpayPaymentId(request.getRazorpayPaymentId())
+                .razorpayOrderId(request.getRazorpayOrderId())
                 .currency("INR")
                 .description(request.getDescription())
                 .paidAt(LocalDateTime.now())
@@ -198,6 +246,24 @@ public class PaymentServiceImpl implements PaymentService {
         return rev != null ? rev : 0.0;
     }
 
+    private void verifyRazorpaySignature(String orderId, String paymentId, String signature) {
+        try {
+            String payload = orderId + "|" + paymentId;
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(razorpayKeySecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            byte[] hash = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+            String computed = HexFormat.of().formatHex(hash);
+            if (!computed.equals(signature)) {
+                throw new IllegalStateException("Razorpay signature verification failed");
+            }
+            log.info("Razorpay signature verified for orderId={}", orderId);
+        } catch (IllegalStateException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalStateException("Signature verification error: " + e.getMessage());
+        }
+    }
+
     private void addRow(Document doc, Font labelFont, Font valueFont, String label, String value)
             throws DocumentException {
         Paragraph p = new Paragraph();
@@ -226,6 +292,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .status(p.getStatus())
                 .mode(p.getMode())
                 .transactionId(p.getTransactionId())
+                .razorpayPaymentId(p.getRazorpayPaymentId())
                 .currency(p.getCurrency())
                 .description(p.getDescription())
                 .paidAt(p.getPaidAt())
