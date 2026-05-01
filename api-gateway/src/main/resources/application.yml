@@ -8,6 +8,9 @@ spring:
     lazy-initialization: true
   cloud:
     gateway:
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 10s
       routes:
         - id: auth-service
           uri: lb://auth-service
@@ -38,6 +41,11 @@ spring:
           uri: lb://analytics-service
           predicates:
             - Path=/api/v1/analytics/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: analytics
+                fallbackUri: forward:/fallback/analytics
 
 jwt:
   secret: ${JWT_SECRET:MySuperLongJwtSecretKeyForLocalDevelopmentOnly2026MakeItAtLeast64CharsLong!}
@@ -48,6 +56,15 @@ eureka:
       defaultZone: http://localhost:8761/eureka/
   instance:
     prefer-ip-address: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      analytics:
+        sliding-window-size: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 15s
+        permitted-number-of-calls-in-half-open-state: 2
 
 management:
   endpoints:
