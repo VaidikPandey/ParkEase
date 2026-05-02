@@ -4,6 +4,7 @@ import com.parkease.analytics.domain.entity.BookingAnalytics;
 import com.parkease.analytics.repository.BookingAnalyticsRepository;
 import com.parkease.analytics.service.AnalyticsService;
 import com.parkease.analytics.web.dto.*;
+import com.parkease.analytics.web.dto.DriverAnalyticsResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
@@ -154,6 +155,52 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .activeBookings(getActiveBookings(lotId))
                 .utilisation(getUtilisation(lotId, from, to))
                 .peakHours(getHourlyTraffic(lotId, from, to))
+                .build();
+    }
+
+    @Override
+    public DriverAnalyticsResponse getDriverAnalytics(Long driverId, LocalDateTime from, LocalDateTime to) {
+        List<BookingAnalytics> bookings = repository.findByDriverIdInRange(driverId, from, to);
+
+        long total     = bookings.size();
+        long completed = bookings.stream().filter(b -> b.getStatus() == BookingAnalytics.BookingStatus.COMPLETED).count();
+        long cancelled = bookings.stream().filter(b -> b.getStatus() == BookingAnalytics.BookingStatus.CANCELLED).count();
+
+        long totalMinutes = bookings.stream()
+                .filter(b -> b.getDurationMinutes() != null)
+                .mapToLong(BookingAnalytics::getDurationMinutes)
+                .sum();
+
+        double totalSpent = bookings.stream()
+                .filter(b -> b.getTotalFare() != null)
+                .mapToDouble(BookingAnalytics::getTotalFare)
+                .sum();
+
+        List<Object[]> typeCounts = repository.countByBookingTypeForDriver(driverId, from, to);
+        long preBooking = 0, walkIn = 0;
+        for (Object[] row : typeCounts) {
+            String type  = (String) row[0];
+            long   count = ((Number) row[1]).longValue();
+            if ("PRE_BOOKING".equals(type)) preBooking = count;
+            else if ("WALK_IN".equals(type)) walkIn = count;
+        }
+
+        double prePct  = total == 0 ? 0.0 : Math.round(preBooking * 10000.0 / total) / 100.0;
+        double walkPct = total == 0 ? 0.0 : Math.round(walkIn    * 10000.0 / total) / 100.0;
+
+        return DriverAnalyticsResponse.builder()
+                .driverId(driverId)
+                .from(from.format(FMT))
+                .to(to.format(FMT))
+                .totalBookings(total)
+                .completedBookings(completed)
+                .cancelledBookings(cancelled)
+                .preBookingCount(preBooking)
+                .walkInCount(walkIn)
+                .preBookingPct(prePct)
+                .walkInPct(walkPct)
+                .totalDurationMinutes(totalMinutes)
+                .totalSpent(totalSpent)
                 .build();
     }
 }

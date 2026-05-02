@@ -58,4 +58,29 @@ public interface BookingAnalyticsRepository extends JpaRepository<BookingAnalyti
             @Param("lotId") Long lotId,
             @Param("from") LocalDateTime from,
             @Param("to") LocalDateTime to);
+
+    @Query("""
+            SELECT ba FROM BookingAnalytics ba
+            WHERE ba.driverId = :driverId
+              AND ba.confirmedAt >= :from
+              AND ba.confirmedAt <= :to
+            ORDER BY ba.confirmedAt DESC
+            """)
+    List<BookingAnalytics> findByDriverIdInRange(
+            @Param("driverId") Long driverId,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to);
+
+    @Query("""
+            SELECT ba.bookingType, COUNT(ba)
+            FROM BookingAnalytics ba
+            WHERE ba.driverId = :driverId
+              AND ba.confirmedAt >= :from
+              AND ba.confirmedAt <= :to
+            GROUP BY ba.bookingType
+            """)
+    List<Object[]> countByBookingTypeForDriver(
+            @Param("driverId") Long driverId,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to);
 }
