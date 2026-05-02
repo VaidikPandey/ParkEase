@@ -1,6 +1,7 @@
 package com.parkease.analytics.service;
 
 import com.parkease.analytics.web.dto.*;
+import com.parkease.analytics.web.dto.DriverAnalyticsResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,4 +19,6 @@ public interface AnalyticsService {
     Object getRevenue(Long lotId, LocalDateTime from, LocalDateTime to, Long userId, String role);
 
     LotSummaryResponse getLotSummary(Long lotId);
+
+    DriverAnalyticsResponse getDriverAnalytics(Long driverId, LocalDateTime from, LocalDateTime to);
 }

@@ -95,8 +95,8 @@ public class PaymentResource {
     }
 
     @GetMapping("/admin/revenue/lot/{lotId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Revenue report for a lot — ADMIN")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @Operation(summary = "Revenue report for a lot — ADMIN / MANAGER")
     public ResponseEntity<RevenueReportResponse> getLotRevenue(
             @PathVariable Long lotId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
