@@ -25,6 +25,14 @@
 		<sonar.organization>vaidikpandey</sonar.organization>
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 		<sonar.projectKey>VaidikPandey_ParkEase_booking-service</sonar.projectKey>
+		<sonar.coverage.exclusions>
+		  **/config/**,
+		  **/domain/entity/**,
+		  **/web/dto/**,
+		  **/web/error/ErrorResponse.java,
+		  **/repository/**,
+		  **/*Application.java
+		</sonar.coverage.exclusions>
 	</properties>
 
 	<dependencies>
@@ -189,6 +197,14 @@
 							<formats>
 								<format>XML</format>
 							</formats>
+							<excludes>
+								<exclude>**/*Application.class</exclude>
+								<exclude>**/config/**</exclude>
+								<exclude>**/domain/entity/**</exclude>
+								<exclude>**/web/dto/**</exclude>
+								<exclude>**/web/error/ErrorResponse.class</exclude>
+								<exclude>**/repository/**</exclude>
+							</excludes>
 						</configuration>
 					</execution>
 				</executions>

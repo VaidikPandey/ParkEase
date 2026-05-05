@@ -24,6 +24,10 @@
         <sonar.organization>vaidikpandey</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.projectKey>VaidikPandey_ParkEase_api-gateway</sonar.projectKey>
+        <sonar.coverage.exclusions>
+          **/config/**,
+          **/*Application.java
+        </sonar.coverage.exclusions>
     </properties>
 
     <dependencies>
@@ -82,6 +86,18 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
         </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
@@ -137,6 +153,10 @@
                             <formats>
                                 <format>XML</format>
                             </formats>
+                            <excludes>
+                                <exclude>**/*Application.class</exclude>
+                                <exclude>**/config/**</exclude>
+                            </excludes>
                         </configuration>
                     </execution>
                 </executions>
