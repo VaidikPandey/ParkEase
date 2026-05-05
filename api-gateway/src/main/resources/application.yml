@@ -11,6 +11,21 @@ spring:
       httpclient:
         connect-timeout: 5000
         response-timeout: 10s
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOriginPatterns:
+              - "${CORS_ALLOWED_ORIGIN:http://localhost:4200}"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
       routes:
         - id: auth-service
           uri: lb://auth-service
@@ -49,25 +64,6 @@ spring:
 
 jwt:
   secret: ${JWT_SECRET:MySuperLongJwtSecretKeyForLocalDevelopmentOnly2026MakeItAtLeast64CharsLong!}
-
-spring:
-  cloud:
-    gateway:
-      globalcors:
-        corsConfigurations:
-          '[/**]':
-            allowedOriginPatterns:
-              - "${CORS_ALLOWED_ORIGIN:http://localhost:4200}"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - PATCH
-              - DELETE
-              - OPTIONS
-            allowedHeaders: "*"
-            allowCredentials: true
-            maxAge: 3600
 
 eureka:
   client:
