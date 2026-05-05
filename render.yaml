@@ -15,7 +15,7 @@ envVarGroups:
       - key: SPRING_DATA_REDIS_HOST
         sync: false
       - key: SPRING_DATA_REDIS_PORT
-        value: "6379"
+        sync: false
       - key: REDIS_PASSWORD
         sync: false
 
@@ -24,7 +24,11 @@ envVarGroups:
       - key: SPRING_RABBITMQ_HOST
         sync: false
       - key: SPRING_RABBITMQ_PORT
-        value: "5672"
+        value: "5671"
+      - key: SPRING_RABBITMQ_SSL_ENABLED
+        value: "true"
+      - key: SPRING_RABBITMQ_VIRTUAL_HOST
+        sync: false
       - key: RABBITMQ_USER
         sync: false
       - key: RABBITMQ_PASSWORD
