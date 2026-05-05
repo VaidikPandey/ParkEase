@@ -39,28 +39,27 @@ services:
     dockerContext: ./api-gateway
     plan: free
     branch: main
-    port: 8080
     healthCheckPath: /actuator/health
     envVars:
+      - key: PORT
+        value: "8080"
       - key: SPRING_PROFILES_ACTIVE
         value: prod
       - fromGroup: parkease-jwt
-      # Set these after deploying each service — use its Render URL
       - key: AUTH_SERVICE_URL
-        sync: false   # e.g. https://parkease-auth.onrender.com
+        sync: false
       - key: PARKING_SERVICE_URL
-        sync: false   # e.g. https://parkease-parking.onrender.com
+        sync: false
       - key: BOOKING_SERVICE_URL
-        sync: false   # e.g. https://parkease-booking.onrender.com
+        sync: false
       - key: PAYMENT_SERVICE_URL
-        sync: false   # e.g. https://parkease-payment.onrender.com
+        sync: false
       - key: NOTIFICATION_SERVICE_URL
-        sync: false   # e.g. https://parkease-notification.onrender.com
+        sync: false
       - key: ANALYTICS_SERVICE_URL
-        sync: false   # e.g. https://parkease-analytics.onrender.com
-      # Set to your Vercel URL after frontend deploy
+        sync: false
       - key: CORS_ALLOWED_ORIGIN
-        sync: false   # e.g. https://parkease-frontend.vercel.app
+        sync: false
 
   # ── Auth Service ───────────────────────────────────────────────────────────
   - type: web
@@ -70,10 +69,10 @@ services:
     dockerContext: ./auth-service
     plan: free
     branch: main
-    port: 8081
     healthCheckPath: /actuator/health
     envVars:
-      # SPRING_DATASOURCE_URL = jdbc:postgresql://<DB_HOST>:<DB_PORT>/auth_db
+      - key: PORT
+        value: "8081"
       - key: SPRING_DATASOURCE_URL
         sync: false
       - key: POSTGRES_USER
@@ -105,10 +104,10 @@ services:
     dockerContext: ./parking-service
     plan: free
     branch: main
-    port: 8082
     healthCheckPath: /actuator/health
     envVars:
-      # SPRING_DATASOURCE_URL = jdbc:postgresql://<DB_HOST>:<DB_PORT>/parking_db
+      - key: PORT
+        value: "8082"
       - key: SPRING_DATASOURCE_URL
         sync: false
       - key: POSTGRES_USER
@@ -133,10 +132,10 @@ services:
     dockerContext: ./booking-service
     plan: free
     branch: main
-    port: 8083
     healthCheckPath: /actuator/health
     envVars:
-      # SPRING_DATASOURCE_URL = jdbc:postgresql://<DB_HOST>:<DB_PORT>/booking_db
+      - key: PORT
+        value: "8083"
       - key: SPRING_DATASOURCE_URL
         sync: false
       - key: POSTGRES_USER
@@ -161,10 +160,10 @@ services:
     dockerContext: ./payment-service
     plan: free
     branch: main
-    port: 8084
     healthCheckPath: /actuator/health
     envVars:
-      # SPRING_DATASOURCE_URL = jdbc:postgresql://<DB_HOST>:<DB_PORT>/payment_db
+      - key: PORT
+        value: "8084"
       - key: SPRING_DATASOURCE_URL
         sync: false
       - key: POSTGRES_USER
@@ -192,10 +191,10 @@ services:
     dockerContext: ./notification-service
     plan: free
     branch: main
-    port: 8085
     healthCheckPath: /actuator/health
     envVars:
-      # SPRING_DATASOURCE_URL = jdbc:postgresql://<DB_HOST>:<DB_PORT>/notification_db
+      - key: PORT
+        value: "8085"
       - key: SPRING_DATASOURCE_URL
         sync: false
       - key: POSTGRES_USER
@@ -227,10 +226,10 @@ services:
     dockerContext: ./analytics-service
     plan: free
     branch: main
-    port: 8086
     healthCheckPath: /actuator/health
     envVars:
-      # SPRING_DATASOURCE_URL = jdbc:postgresql://<DB_HOST>:<DB_PORT>/analytics_db
+      - key: PORT
+        value: "8086"
       - key: SPRING_DATASOURCE_URL
         sync: false
       - key: POSTGRES_USER
@@ -244,6 +243,6 @@ services:
       - fromGroup: parkease-jwt
       - fromGroup: parkease-rabbitmq
       - key: PAYMENT_SERVICE_URL
-        sync: false   # e.g. https://parkease-payment.onrender.com
+        sync: false
       - key: EUREKA_CLIENT_ENABLED
         value: "false"
