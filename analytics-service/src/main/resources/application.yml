@@ -53,7 +53,7 @@ jwt:
   secret: ${JWT_SECRET:MySuperLongJwtSecretKeyForLocalDevelopmentOnly2026MakeItAtLeast64CharsLong!}
 
 services:
-  payment-url: http://localhost:8084
+  payment-url: ${PAYMENT_SERVICE_URL:http://localhost:8084}
 
 management:
   endpoints:

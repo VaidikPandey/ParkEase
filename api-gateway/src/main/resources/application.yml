@@ -50,6 +50,25 @@ spring:
 jwt:
   secret: ${JWT_SECRET:MySuperLongJwtSecretKeyForLocalDevelopmentOnly2026MakeItAtLeast64CharsLong!}
 
+spring:
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOriginPatterns:
+              - "${CORS_ALLOWED_ORIGIN:http://localhost:4200}"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+
 eureka:
   client:
     service-url:

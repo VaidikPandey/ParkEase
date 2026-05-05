@@ -1,0 +1,78 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build & Test (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - eureka-server
+          - api-gateway
+          - auth-service
+          - parking-service
+          - booking-service
+          - payment-service
+          - notification-service
+          - analytics-service
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build & test ${{ matrix.service }}
+        run: mvn -f ${{ matrix.service }}/pom.xml verify -q
+
+  deploy:
+    name: Deploy to Render
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy API Gateway
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_HOOK_API_GATEWAY }}")
+          echo "api-gateway deploy triggered: $STATUS"
+
+      - name: Deploy Auth Service
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_HOOK_AUTH }}")
+          echo "auth-service deploy triggered: $STATUS"
+
+      - name: Deploy Parking Service
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_HOOK_PARKING }}")
+          echo "parking-service deploy triggered: $STATUS"
+
+      - name: Deploy Booking Service
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_HOOK_BOOKING }}")
+          echo "booking-service deploy triggered: $STATUS"
+
+      - name: Deploy Payment Service
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_HOOK_PAYMENT }}")
+          echo "payment-service deploy triggered: $STATUS"
+
+      - name: Deploy Notification Service
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_HOOK_NOTIFICATION }}")
+          echo "notification-service deploy triggered: $STATUS"
+
+      - name: Deploy Analytics Service
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_HOOK_ANALYTICS }}")
+          echo "analytics-service deploy triggered: $STATUS"
