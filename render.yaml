@@ -1,0 +1,249 @@
+databases:
+  - name: parkease-postgres
+    databaseName: parkease
+    user: parkease
+    plan: free
+
+envVarGroups:
+  - name: parkease-jwt
+    envVars:
+      - key: JWT_SECRET
+        sync: false
+
+  - name: parkease-redis
+    envVars:
+      - key: SPRING_DATA_REDIS_HOST
+        sync: false
+      - key: SPRING_DATA_REDIS_PORT
+        value: "6379"
+      - key: REDIS_PASSWORD
+        sync: false
+
+  - name: parkease-rabbitmq
+    envVars:
+      - key: SPRING_RABBITMQ_HOST
+        sync: false
+      - key: SPRING_RABBITMQ_PORT
+        value: "5672"
+      - key: RABBITMQ_USER
+        sync: false
+      - key: RABBITMQ_PASSWORD
+        sync: false
+
+services:
+  # ── API Gateway ────────────────────────────────────────────────────────────
+  - type: web
+    name: parkease-api-gateway
+    runtime: docker
+    dockerfilePath: ./api-gateway/Dockerfile
+    dockerContext: ./api-gateway
+    plan: free
+    branch: main
+    port: 8080
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - fromGroup: parkease-jwt
+      # Set these after deploying each service — use its Render URL
+      - key: AUTH_SERVICE_URL
+        sync: false   # e.g. https://parkease-auth.onrender.com
+      - key: PARKING_SERVICE_URL
+        sync: false   # e.g. https://parkease-parking.onrender.com
+      - key: BOOKING_SERVICE_URL
+        sync: false   # e.g. https://parkease-booking.onrender.com
+      - key: PAYMENT_SERVICE_URL
+        sync: false   # e.g. https://parkease-payment.onrender.com
+      - key: NOTIFICATION_SERVICE_URL
+        sync: false   # e.g. https://parkease-notification.onrender.com
+      - key: ANALYTICS_SERVICE_URL
+        sync: false   # e.g. https://parkease-analytics.onrender.com
+      # Set to your Vercel URL after frontend deploy
+      - key: CORS_ALLOWED_ORIGIN
+        sync: false   # e.g. https://parkease-frontend.vercel.app
+
+  # ── Auth Service ───────────────────────────────────────────────────────────
+  - type: web
+    name: parkease-auth
+    runtime: docker
+    dockerfilePath: ./auth-service/Dockerfile
+    dockerContext: ./auth-service
+    plan: free
+    branch: main
+    port: 8081
+    healthCheckPath: /actuator/health
+    envVars:
+      # SPRING_DATASOURCE_URL = jdbc:postgresql://<DB_HOST>:<DB_PORT>/auth_db
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: parkease-postgres
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: parkease-postgres
+          property: password
+      - fromGroup: parkease-jwt
+      - fromGroup: parkease-redis
+      - key: JWT_EXPIRY_MS
+        value: "86400000"
+      - key: JWT_REFRESH_EXPIRY_MS
+        value: "604800000"
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: EUREKA_CLIENT_ENABLED
+        value: "false"
+
+  # ── Parking Service ────────────────────────────────────────────────────────
+  - type: web
+    name: parkease-parking
+    runtime: docker
+    dockerfilePath: ./parking-service/Dockerfile
+    dockerContext: ./parking-service
+    plan: free
+    branch: main
+    port: 8082
+    healthCheckPath: /actuator/health
+    envVars:
+      # SPRING_DATASOURCE_URL = jdbc:postgresql://<DB_HOST>:<DB_PORT>/parking_db
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: parkease-postgres
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: parkease-postgres
+          property: password
+      - fromGroup: parkease-jwt
+      - fromGroup: parkease-redis
+      - fromGroup: parkease-rabbitmq
+      - key: EUREKA_CLIENT_ENABLED
+        value: "false"
+
+  # ── Booking Service ────────────────────────────────────────────────────────
+  - type: web
+    name: parkease-booking
+    runtime: docker
+    dockerfilePath: ./booking-service/Dockerfile
+    dockerContext: ./booking-service
+    plan: free
+    branch: main
+    port: 8083
+    healthCheckPath: /actuator/health
+    envVars:
+      # SPRING_DATASOURCE_URL = jdbc:postgresql://<DB_HOST>:<DB_PORT>/booking_db
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: parkease-postgres
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: parkease-postgres
+          property: password
+      - fromGroup: parkease-jwt
+      - fromGroup: parkease-redis
+      - fromGroup: parkease-rabbitmq
+      - key: EUREKA_CLIENT_ENABLED
+        value: "false"
+
+  # ── Payment Service ────────────────────────────────────────────────────────
+  - type: web
+    name: parkease-payment
+    runtime: docker
+    dockerfilePath: ./payment-service/Dockerfile
+    dockerContext: ./payment-service
+    plan: free
+    branch: main
+    port: 8084
+    healthCheckPath: /actuator/health
+    envVars:
+      # SPRING_DATASOURCE_URL = jdbc:postgresql://<DB_HOST>:<DB_PORT>/payment_db
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: parkease-postgres
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: parkease-postgres
+          property: password
+      - fromGroup: parkease-jwt
+      - fromGroup: parkease-rabbitmq
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: EUREKA_CLIENT_ENABLED
+        value: "false"
+
+  # ── Notification Service ───────────────────────────────────────────────────
+  - type: web
+    name: parkease-notification
+    runtime: docker
+    dockerfilePath: ./notification-service/Dockerfile
+    dockerContext: ./notification-service
+    plan: free
+    branch: main
+    port: 8085
+    healthCheckPath: /actuator/health
+    envVars:
+      # SPRING_DATASOURCE_URL = jdbc:postgresql://<DB_HOST>:<DB_PORT>/notification_db
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: parkease-postgres
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: parkease-postgres
+          property: password
+      - fromGroup: parkease-jwt
+      - fromGroup: parkease-rabbitmq
+      - key: MAIL_USERNAME
+        value: "pandeyvaidik04@gmail.com"
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_FROM
+        value: "pandeyvaidik04@gmail.com"
+      - key: MAIL_ENABLED
+        value: "true"
+      - key: EUREKA_CLIENT_ENABLED
+        value: "false"
+
+  # ── Analytics Service ──────────────────────────────────────────────────────
+  - type: web
+    name: parkease-analytics
+    runtime: docker
+    dockerfilePath: ./analytics-service/Dockerfile
+    dockerContext: ./analytics-service
+    plan: free
+    branch: main
+    port: 8086
+    healthCheckPath: /actuator/health
+    envVars:
+      # SPRING_DATASOURCE_URL = jdbc:postgresql://<DB_HOST>:<DB_PORT>/analytics_db
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: parkease-postgres
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: parkease-postgres
+          property: password
+      - fromGroup: parkease-jwt
+      - fromGroup: parkease-rabbitmq
+      - key: PAYMENT_SERVICE_URL
+        sync: false   # e.g. https://parkease-payment.onrender.com
+      - key: EUREKA_CLIENT_ENABLED
+        value: "false"

@@ -1,0 +1,42 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: ${AUTH_SERVICE_URL}
+          predicates:
+            - Path=/api/v1/auth/**,/api/v1/admin/**,/api/v1/users/**,/oauth2/**,/login/oauth2/**
+
+        - id: parking-service
+          uri: ${PARKING_SERVICE_URL}
+          predicates:
+            - Path=/api/v1/parking/**
+
+        - id: booking-service
+          uri: ${BOOKING_SERVICE_URL}
+          predicates:
+            - Path=/api/v1/bookings/**
+
+        - id: payment-service
+          uri: ${PAYMENT_SERVICE_URL}
+          predicates:
+            - Path=/api/v1/payments/**
+
+        - id: notification-service
+          uri: ${NOTIFICATION_SERVICE_URL}
+          predicates:
+            - Path=/api/v1/notifications/**
+
+        - id: analytics-service
+          uri: ${ANALYTICS_SERVICE_URL}
+          predicates:
+            - Path=/api/v1/analytics/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: analytics
+                fallbackUri: forward:/fallback/analytics
+
+eureka:
+  client:
+    enabled: false
