@@ -8,7 +8,7 @@ spring:
     lazy-initialization: true
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/notification_db
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/notification_db}
     username: ${POSTGRES_USER:postgres}
     password: ${POSTGRES_PASSWORD:postgres}
     hikari:
