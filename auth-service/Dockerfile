@@ -8,4 +8,4 @@ RUN mvn package -DskipTests -q
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-ENTRYPOINT ["java", "-Xmx200m", "-Xms64m", "-Dspring.main.lazy-initialization=true", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java -Xmx200m -Xms64m -Dserver.port=${PORT:-8081} -Dspring.main.lazy-initialization=true -jar app.jar"]
