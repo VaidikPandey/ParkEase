@@ -9,8 +9,8 @@ spring:
   cloud:
     gateway:
       httpclient:
-        connect-timeout: 5000
-        response-timeout: 10s
+        connect-timeout: 30000
+        response-timeout: 60s
       globalcors:
         corsConfigurations:
           '[/**]':
