@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -23,6 +24,9 @@ public class OAuth2AuthenticationSuccessHandler
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final CookieUtil cookieUtil;
+
+    @Value("${FRONTEND_URL:http://localhost:4200}")
+    private String frontendUrl;
 
     @Override
     public void onAuthenticationSuccess(
@@ -67,15 +71,16 @@ public class OAuth2AuthenticationSuccessHandler
         String accessToken  = jwtUtil.generateAccessToken(user.getEmail(), user.getRole().name(), user.getUserId());
         String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
 
-        // Set tokens as HttpOnly cookies — no tokens in the redirect URL
         response.addHeader("Set-Cookie", cookieUtil.createAccessTokenCookie(accessToken).toString());
         response.addHeader("Set-Cookie", cookieUtil.createRefreshTokenCookie(refreshToken).toString());
 
         log.info("OAuth2 login successful for: {} (new={})", email, isNew[0]);
 
-        String redirectUrl = "http://localhost:4200/oauth2/success"
+        String redirectUrl = frontendUrl + "/oauth2/success"
                 + "?isNewUser=" + isNew[0]
                 + "&userId=" + user.getUserId()
+                + "&accessToken=" + java.net.URLEncoder.encode(accessToken, java.nio.charset.StandardCharsets.UTF_8)
+                + "&refreshToken=" + java.net.URLEncoder.encode(refreshToken, java.nio.charset.StandardCharsets.UTF_8)
                 + "&email=" + java.net.URLEncoder.encode(user.getEmail(), java.nio.charset.StandardCharsets.UTF_8)
                 + "&fullName=" + java.net.URLEncoder.encode(user.getFullName(), java.nio.charset.StandardCharsets.UTF_8)
                 + "&role=" + user.getRole().name();

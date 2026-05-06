@@ -92,8 +92,10 @@ public class AuthResource {
     })
     public ResponseEntity<AuthResponse> refresh(
             HttpServletRequest request,
-            HttpServletResponse response) {
+            HttpServletResponse response,
+            @RequestHeader(value = "X-Refresh-Token", required = false) String headerRefreshToken) {
         String refreshToken = JwtCookieFilter.extractFromCookie(request, "refresh_token");
+        if (refreshToken == null) refreshToken = headerRefreshToken;
         if (refreshToken == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
