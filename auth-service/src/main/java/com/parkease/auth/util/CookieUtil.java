@@ -16,10 +16,10 @@ public class CookieUtil {
     public ResponseCookie createAccessTokenCookie(String token) {
         return ResponseCookie.from("access_token", token)
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .path("/")
                 .maxAge(accessExpiryMs / 1000)
-                .sameSite("Strict")
+                .sameSite("None")
                 .build();
     }
 

@@ -79,7 +79,6 @@ public class OAuth2AuthenticationSuccessHandler
         String redirectUrl = frontendUrl + "/oauth2/success"
                 + "?isNewUser=" + isNew[0]
                 + "&userId=" + user.getUserId()
-                + "&accessToken=" + java.net.URLEncoder.encode(accessToken, java.nio.charset.StandardCharsets.UTF_8)
                 + "&refreshToken=" + java.net.URLEncoder.encode(refreshToken, java.nio.charset.StandardCharsets.UTF_8)
                 + "&email=" + java.net.URLEncoder.encode(user.getEmail(), java.nio.charset.StandardCharsets.UTF_8)
                 + "&fullName=" + java.net.URLEncoder.encode(user.getFullName(), java.nio.charset.StandardCharsets.UTF_8)
