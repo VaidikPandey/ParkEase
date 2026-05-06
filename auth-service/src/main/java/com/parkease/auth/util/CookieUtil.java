@@ -26,20 +26,20 @@ public class CookieUtil {
     public ResponseCookie createRefreshTokenCookie(String token) {
         return ResponseCookie.from("refresh_token", token)
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .path("/")
                 .maxAge(refreshExpiryMs / 1000)
-                .sameSite("Strict")
+                .sameSite("None")
                 .build();
     }
 
     public ResponseCookie clearCookie(String name) {
         return ResponseCookie.from(name, "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .path("/")
                 .maxAge(0)
-                .sameSite("Strict")
+                .sameSite("None")
                 .build();
     }
 }

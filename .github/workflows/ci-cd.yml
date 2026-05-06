@@ -43,36 +43,78 @@ jobs:
 
     steps:
       - name: Deploy API Gateway
+        env:
+          HOOK: ${{ secrets.RENDER_HOOK_API_GATEWAY }}
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_HOOK_API_GATEWAY }}")
-          echo "api-gateway deploy triggered: $STATUS"
+          if [ -n "$HOOK" ]; then
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$HOOK")
+            echo "api-gateway deploy triggered: $STATUS"
+          else
+            echo "RENDER_HOOK_API_GATEWAY not set — skipping"
+          fi
 
       - name: Deploy Auth Service
+        env:
+          HOOK: ${{ secrets.RENDER_HOOK_AUTH }}
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_HOOK_AUTH }}")
-          echo "auth-service deploy triggered: $STATUS"
+          if [ -n "$HOOK" ]; then
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$HOOK")
+            echo "auth-service deploy triggered: $STATUS"
+          else
+            echo "RENDER_HOOK_AUTH not set — skipping"
+          fi
 
       - name: Deploy Parking Service
+        env:
+          HOOK: ${{ secrets.RENDER_HOOK_PARKING }}
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_HOOK_PARKING }}")
-          echo "parking-service deploy triggered: $STATUS"
+          if [ -n "$HOOK" ]; then
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$HOOK")
+            echo "parking-service deploy triggered: $STATUS"
+          else
+            echo "RENDER_HOOK_PARKING not set — skipping"
+          fi
 
       - name: Deploy Booking Service
+        env:
+          HOOK: ${{ secrets.RENDER_HOOK_BOOKING }}
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_HOOK_BOOKING }}")
-          echo "booking-service deploy triggered: $STATUS"
+          if [ -n "$HOOK" ]; then
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$HOOK")
+            echo "booking-service deploy triggered: $STATUS"
+          else
+            echo "RENDER_HOOK_BOOKING not set — skipping"
+          fi
 
       - name: Deploy Payment Service
+        env:
+          HOOK: ${{ secrets.RENDER_HOOK_PAYMENT }}
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_HOOK_PAYMENT }}")
-          echo "payment-service deploy triggered: $STATUS"
+          if [ -n "$HOOK" ]; then
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$HOOK")
+            echo "payment-service deploy triggered: $STATUS"
+          else
+            echo "RENDER_HOOK_PAYMENT not set — skipping"
+          fi
 
       - name: Deploy Notification Service
+        env:
+          HOOK: ${{ secrets.RENDER_HOOK_NOTIFICATION }}
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_HOOK_NOTIFICATION }}")
-          echo "notification-service deploy triggered: $STATUS"
+          if [ -n "$HOOK" ]; then
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$HOOK")
+            echo "notification-service deploy triggered: $STATUS"
+          else
+            echo "RENDER_HOOK_NOTIFICATION not set — skipping"
+          fi
 
       - name: Deploy Analytics Service
+        env:
+          HOOK: ${{ secrets.RENDER_HOOK_ANALYTICS }}
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_HOOK_ANALYTICS }}")
-          echo "analytics-service deploy triggered: $STATUS"
+          if [ -n "$HOOK" ]; then
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$HOOK")
+            echo "analytics-service deploy triggered: $STATUS"
+          else
+            echo "RENDER_HOOK_ANALYTICS not set — skipping"
+          fi
