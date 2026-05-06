@@ -108,8 +108,6 @@ spring:
             - RewritePath=/v3/api-docs/analytics, /api-docs
 
 springdoc:
-  api-docs:
-    enabled: false
   swagger-ui:
     path: /swagger-ui.html
     urls:
