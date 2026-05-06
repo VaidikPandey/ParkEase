@@ -62,6 +62,67 @@ spring:
                 name: analytics
                 fallbackUri: forward:/fallback/analytics
 
+        - id: auth-service-docs
+          uri: lb://auth-service
+          predicates:
+            - Path=/v3/api-docs/auth
+          filters:
+            - RewritePath=/v3/api-docs/auth, /api-docs
+
+        - id: parking-service-docs
+          uri: lb://parking-service
+          predicates:
+            - Path=/v3/api-docs/parking
+          filters:
+            - RewritePath=/v3/api-docs/parking, /api-docs
+
+        - id: booking-service-docs
+          uri: lb://booking-service
+          predicates:
+            - Path=/v3/api-docs/booking
+          filters:
+            - RewritePath=/v3/api-docs/booking, /api-docs
+
+        - id: payment-service-docs
+          uri: lb://payment-service
+          predicates:
+            - Path=/v3/api-docs/payment
+          filters:
+            - RewritePath=/v3/api-docs/payment, /api-docs
+
+        - id: notification-service-docs
+          uri: lb://notification-service
+          predicates:
+            - Path=/v3/api-docs/notification
+          filters:
+            - RewritePath=/v3/api-docs/notification, /api-docs
+
+        - id: analytics-service-docs
+          uri: lb://analytics-service
+          predicates:
+            - Path=/v3/api-docs/analytics
+          filters:
+            - RewritePath=/v3/api-docs/analytics, /api-docs
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: auth-service
+        url: /v3/api-docs/auth
+      - name: parking-service
+        url: /v3/api-docs/parking
+      - name: booking-service
+        url: /v3/api-docs/booking
+      - name: payment-service
+        url: /v3/api-docs/payment
+      - name: notification-service
+        url: /v3/api-docs/notification
+      - name: analytics-service
+        url: /v3/api-docs/analytics
+
 jwt:
   secret: ${JWT_SECRET:MySuperLongJwtSecretKeyForLocalDevelopmentOnly2026MakeItAtLeast64CharsLong!}
 

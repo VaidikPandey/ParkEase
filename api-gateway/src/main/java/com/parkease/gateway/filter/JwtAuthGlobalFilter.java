@@ -27,7 +27,10 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
             "/api/v1/auth/register",
             "/api/v1/auth/refresh",
             "/oauth2/",
-            "/login/oauth2/"
+            "/login/oauth2/",
+            "/swagger-ui",
+            "/v3/api-docs",
+            "/webjars/"
     );
 
     private static final List<String> ADMIN_PATHS = List.of(

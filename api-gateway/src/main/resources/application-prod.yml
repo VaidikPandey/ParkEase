@@ -37,6 +37,48 @@ spring:
                 name: analytics
                 fallbackUri: forward:/fallback/analytics
 
+        - id: auth-service-docs
+          uri: ${AUTH_SERVICE_URL}
+          predicates:
+            - Path=/v3/api-docs/auth
+          filters:
+            - RewritePath=/v3/api-docs/auth, /api-docs
+
+        - id: parking-service-docs
+          uri: ${PARKING_SERVICE_URL}
+          predicates:
+            - Path=/v3/api-docs/parking
+          filters:
+            - RewritePath=/v3/api-docs/parking, /api-docs
+
+        - id: booking-service-docs
+          uri: ${BOOKING_SERVICE_URL}
+          predicates:
+            - Path=/v3/api-docs/booking
+          filters:
+            - RewritePath=/v3/api-docs/booking, /api-docs
+
+        - id: payment-service-docs
+          uri: ${PAYMENT_SERVICE_URL}
+          predicates:
+            - Path=/v3/api-docs/payment
+          filters:
+            - RewritePath=/v3/api-docs/payment, /api-docs
+
+        - id: notification-service-docs
+          uri: ${NOTIFICATION_SERVICE_URL}
+          predicates:
+            - Path=/v3/api-docs/notification
+          filters:
+            - RewritePath=/v3/api-docs/notification, /api-docs
+
+        - id: analytics-service-docs
+          uri: ${ANALYTICS_SERVICE_URL}
+          predicates:
+            - Path=/v3/api-docs/analytics
+          filters:
+            - RewritePath=/v3/api-docs/analytics, /api-docs
+
 eureka:
   client:
     enabled: false
