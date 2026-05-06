@@ -106,8 +106,11 @@ spring:
             - RewritePath=/v3/api-docs/analytics, /api-docs
 
 springdoc:
+  api-docs:
+    path: /gateway-docs
   swagger-ui:
     path: /swagger-ui.html
+    config-url: /gateway-docs/swagger-config
     urls:
       - name: auth-service
         url: /v3/api-docs/auth
