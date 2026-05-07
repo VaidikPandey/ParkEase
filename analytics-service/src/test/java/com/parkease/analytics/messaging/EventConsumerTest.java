@@ -56,6 +56,39 @@ class EventConsumerTest {
         verify(repository).save(record);
     }
 
+    @Test
+    void handle_ShouldCreateRecord_WhenBookingPending() {
+        Map<String, Object> event = new HashMap<>();
+        event.put("eventType", "booking.pending");
+        event.put("bookingId", 101);
+        event.put("driverId", 1);
+        event.put("spotId", 10);
+        event.put("lotId", 1);
+        event.put("bookingType", "WALK_IN");
+
+        when(repository.findByBookingId(101L)).thenReturn(Optional.empty());
+
+        eventConsumer.handle(event);
+
+        verify(repository).save(any(BookingAnalytics.class));
+    }
+
+    @Test
+    void handle_ShouldCreateRecord_WhenCheckInArrivesBeforeConfirmedEvent() {
+        Map<String, Object> event = new HashMap<>();
+        event.put("eventType", "booking.checkin");
+        event.put("bookingId", 101L);
+        event.put("driverId", 1L);
+        event.put("spotId", 10L);
+        event.put("lotId", 1L);
+
+        when(repository.findByBookingId(101L)).thenReturn(Optional.empty());
+
+        eventConsumer.handle(event);
+
+        verify(repository).save(any(BookingAnalytics.class));
+    }
+
     private org.assertj.core.api.AbstractAssert<?, ?> assertThat(Object actual) {
         return org.assertj.core.api.Assertions.assertThat(actual);
     }

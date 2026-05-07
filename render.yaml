@@ -12,10 +12,14 @@ envVarGroups:
 
   - name: parkease-redis
     envVars:
+      - key: SPRING_DATA_REDIS_URL
+        sync: false
       - key: SPRING_DATA_REDIS_HOST
         sync: false
       - key: SPRING_DATA_REDIS_PORT
         sync: false
+      - key: SPRING_DATA_REDIS_SSL_ENABLED
+        value: "false"
       - key: REDIS_PASSWORD
         sync: false
 

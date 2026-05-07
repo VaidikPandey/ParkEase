@@ -29,6 +29,7 @@ public class EventConsumer {
             if (eventType == null) return;
 
             switch (eventType) {
+                case "booking.pending"    -> handlePending(event);
                 case "booking.confirmed"  -> handleConfirmed(event);
                 case "booking.checkin"    -> handleCheckIn(event);
                 case "booking.checkout"   -> handleCheckOut(event);
@@ -42,20 +43,29 @@ public class EventConsumer {
         }
     }
 
-    private void handleConfirmed(Map<String, Object> event) {
+    private void handlePending(Map<String, Object> event) {
         Long bookingId = toLong(event.get("bookingId"));
-        if (repository.findByBookingId(bookingId).isPresent()) return;
+        if (bookingId == null || repository.findByBookingId(bookingId).isPresent()) return;
 
-        BookingAnalytics record = BookingAnalytics.builder()
-                .bookingId(bookingId)
-                .driverId(toLong(event.get("driverId")))
-                .spotId(toLong(event.get("spotId")))
-                .lotId(toLong(event.get("lotId")))
-                .spotNumber((String) event.get("spotNumber"))
-                .bookingType((String) event.get("bookingType"))
+        BookingAnalytics record = baseRecord(event)
                 .status(BookingAnalytics.BookingStatus.CONFIRMED)
                 .confirmedAt(toDateTime(event.get("occurredAt")))
                 .build();
+
+        repository.save(record);
+        log.info("Analytics: booking {} pending", bookingId);
+    }
+
+    private void handleConfirmed(Map<String, Object> event) {
+        Long bookingId = toLong(event.get("bookingId"));
+        if (bookingId == null) return;
+
+        BookingAnalytics record = repository.findByBookingId(bookingId)
+                .orElseGet(() -> baseRecord(event).build());
+        record.setStatus(BookingAnalytics.BookingStatus.CONFIRMED);
+        if (record.getConfirmedAt() == null) {
+            record.setConfirmedAt(toDateTime(event.get("occurredAt")));
+        }
 
         repository.save(record);
         log.info("Analytics: booking {} confirmed", bookingId);
@@ -63,12 +73,17 @@ public class EventConsumer {
 
     private void handleCheckIn(Map<String, Object> event) {
         Long bookingId = toLong(event.get("bookingId"));
-        repository.findByBookingId(bookingId).ifPresent(record -> {
-            record.setStatus(BookingAnalytics.BookingStatus.ACTIVE);
-            record.setCheckinAt(toDateTime(event.get("occurredAt")));
-            repository.save(record);
-            log.info("Analytics: booking {} checked in", bookingId);
-        });
+        if (bookingId == null) return;
+
+        BookingAnalytics record = repository.findByBookingId(bookingId)
+                .orElseGet(() -> baseRecord(event).build());
+        record.setStatus(BookingAnalytics.BookingStatus.ACTIVE);
+        record.setCheckinAt(toDateTime(event.get("occurredAt")));
+        if (record.getConfirmedAt() == null) {
+            record.setConfirmedAt(toDateTime(event.get("startTime")));
+        }
+        repository.save(record);
+        log.info("Analytics: booking {} checked in", bookingId);
     }
 
     private void handleCheckOut(Map<String, Object> event) {
@@ -91,22 +106,26 @@ public class EventConsumer {
 
     private void handleCancelled(Map<String, Object> event) {
         Long bookingId = toLong(event.get("bookingId"));
-        repository.findByBookingId(bookingId).ifPresent(record -> {
-            record.setStatus(BookingAnalytics.BookingStatus.CANCELLED);
-            record.setCancelledAt(toDateTime(event.get("occurredAt")));
-            repository.save(record);
-            log.info("Analytics: booking {} cancelled", bookingId);
-        });
+        if (bookingId == null) return;
+
+        BookingAnalytics record = repository.findByBookingId(bookingId)
+                .orElseGet(() -> baseRecord(event).build());
+        record.setStatus(BookingAnalytics.BookingStatus.CANCELLED);
+        record.setCancelledAt(toDateTime(event.get("occurredAt")));
+        repository.save(record);
+        log.info("Analytics: booking {} cancelled", bookingId);
     }
 
     private void handleExpiry(Map<String, Object> event) {
         Long bookingId = toLong(event.get("bookingId"));
-        repository.findByBookingId(bookingId).ifPresent(record -> {
-            record.setStatus(BookingAnalytics.BookingStatus.EXPIRED);
-            record.setCancelledAt(toDateTime(event.get("occurredAt")));
-            repository.save(record);
-            log.info("Analytics: booking {} expired", bookingId);
-        });
+        if (bookingId == null) return;
+
+        BookingAnalytics record = repository.findByBookingId(bookingId)
+                .orElseGet(() -> baseRecord(event).build());
+        record.setStatus(BookingAnalytics.BookingStatus.EXPIRED);
+        record.setCancelledAt(toDateTime(event.get("occurredAt")));
+        repository.save(record);
+        log.info("Analytics: booking {} expired", bookingId);
     }
 
     private void handlePaymentCompleted(Map<String, Object> event) {
@@ -130,6 +149,17 @@ public class EventConsumer {
         if (val == null) return null;
         if (val instanceof Number) return ((Number) val).doubleValue();
         try { return Double.parseDouble(val.toString()); } catch (Exception e) { return null; }
+    }
+
+    private BookingAnalytics.BookingAnalyticsBuilder baseRecord(Map<String, Object> event) {
+        return BookingAnalytics.builder()
+                .bookingId(toLong(event.get("bookingId")))
+                .driverId(toLong(event.get("driverId")))
+                .spotId(toLong(event.get("spotId")))
+                .lotId(toLong(event.get("lotId")))
+                .spotNumber((String) event.get("spotNumber"))
+                .bookingType((String) event.get("bookingType"))
+                .totalFare(toDouble(event.get("totalFare")));
     }
 
     private LocalDateTime toDateTime(Object val) {

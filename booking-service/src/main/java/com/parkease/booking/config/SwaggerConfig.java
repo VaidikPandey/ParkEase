@@ -19,7 +19,7 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
-                .servers(List.of(new Server().url(gatewayUrl).description("API Gateway")))
+                .servers(List.of(new Server().url(resolveServerUrl()).description("API Gateway")))
                 .info(new Info()
                         .title("ParkEase — Booking Service API")
                         .version("1.0.0")
@@ -31,5 +31,11 @@ public class SwaggerConfig {
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
                                 .bearerFormat("JWT")));
+    }
+
+    private String resolveServerUrl() {
+        return gatewayUrl == null || gatewayUrl.isBlank() || gatewayUrl.contains("localhost")
+                ? "/"
+                : gatewayUrl;
     }
 }
