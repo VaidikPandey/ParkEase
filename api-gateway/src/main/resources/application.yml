@@ -17,6 +17,8 @@ spring:
           '[/**]':
             allowedOriginPatterns:
               - "${CORS_ALLOWED_ORIGIN:http://localhost:4200}"
+              - "https://parkease.space"
+              - "https://www.parkease.space"
             allowedMethods:
               - GET
               - POST

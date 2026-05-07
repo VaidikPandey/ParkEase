@@ -44,6 +44,33 @@ public class NotificationResource {
                 .body(notificationService.sendBulk(request));
     }
 
+    @GetMapping("/my")
+    @Operation(summary = "Get notifications for the currently authenticated user (paginated)")
+    public ResponseEntity<Page<NotificationResponse>> getMyNotifications(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        PageRequest pageable = PageRequest.of(page, size, Sort.by("sentAt").descending());
+        return ResponseEntity.ok(notificationService.getByRecipient(userId, pageable));
+    }
+
+    @GetMapping("/my/unread")
+    @Operation(summary = "Get unread notifications for the currently authenticated user (paginated)")
+    public ResponseEntity<Page<NotificationResponse>> getMyUnread(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        PageRequest pageable = PageRequest.of(page, size, Sort.by("sentAt").descending());
+        return ResponseEntity.ok(notificationService.getUnread(userId, pageable));
+    }
+
+    @GetMapping("/my/unread-count")
+    @Operation(summary = "Get unread notification count for the currently authenticated user")
+    public ResponseEntity<Map<String, Long>> getMyUnreadCount(
+            @RequestHeader("X-User-Id") Long userId) {
+        return ResponseEntity.ok(Map.of("unreadCount", notificationService.getUnreadCount(userId)));
+    }
+
     @GetMapping("/recipient/{recipientId}")
     @Operation(summary = "Get all notifications for a recipient (paginated)")
     public ResponseEntity<Page<NotificationResponse>> getByRecipient(
