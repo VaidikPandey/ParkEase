@@ -227,14 +227,12 @@ services:
           property: password
       - fromGroup: parkease-jwt
       - fromGroup: parkease-rabbitmq
-      - key: MAIL_USERNAME
-        value: "pandeyvaidik04@gmail.com"
-      - key: MAIL_PASSWORD
-        sync: false
-      - key: MAIL_FROM
-        value: "pandeyvaidik04@gmail.com"
       - key: MAIL_ENABLED
         value: "true"
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        sync: false
       - key: EUREKA_CLIENT_ENABLED
         value: "false"
       - key: GATEWAY_URL

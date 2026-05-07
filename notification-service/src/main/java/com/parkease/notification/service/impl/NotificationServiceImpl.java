@@ -4,15 +4,14 @@ import com.parkease.notification.domain.entity.Notification;
 import com.parkease.notification.repository.NotificationRepository;
 import com.parkease.notification.service.NotificationService;
 import com.parkease.notification.web.dto.*;
+import com.resend.Resend;
+import com.resend.services.emails.model.CreateEmailOptions;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,12 +26,12 @@ import java.util.List;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
-    private final JavaMailSender mailSender;
+    private final Resend resend;
 
     @Value("${mail.enabled:false}")
     private boolean mailEnabled;
 
-    @Value("${mail.from:noreply@parkease.com}")
+    @Value("${resend.from:ParkEase <noreply@parkease.com>}")
     private String mailFrom;
 
     @Override
@@ -138,12 +137,12 @@ public class NotificationServiceImpl implements NotificationService {
             return false;
         }
         try {
-            SimpleMailMessage msg = new SimpleMailMessage();
-            msg.setFrom(mailFrom);
-            msg.setTo(to);
-            msg.setSubject(subject);
-            msg.setText(body);
-            mailSender.send(msg);
+            resend.emails().send(CreateEmailOptions.builder()
+                    .from(mailFrom)
+                    .to(List.of(to))
+                    .subject(subject)
+                    .text(body)
+                    .build());
             log.info("Email sent to={} subject={}", to, subject);
             return true;
         } catch (Exception e) {
@@ -159,13 +158,12 @@ public class NotificationServiceImpl implements NotificationService {
             return false;
         }
         try {
-            var mime = mailSender.createMimeMessage();
-            var helper = new MimeMessageHelper(mime, true, "UTF-8");
-            helper.setFrom(mailFrom);
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(htmlBody, true);
-            mailSender.send(mime);
+            resend.emails().send(CreateEmailOptions.builder()
+                    .from(mailFrom)
+                    .to(List.of(to))
+                    .subject(subject)
+                    .html(htmlBody)
+                    .build());
             log.info("HTML email sent to={} subject={}", to, subject);
             return true;
         } catch (Exception e) {
