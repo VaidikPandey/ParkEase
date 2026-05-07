@@ -5,15 +5,13 @@ import com.parkease.notification.repository.NotificationRepository;
 import com.parkease.notification.web.dto.BulkNotificationRequest;
 import com.parkease.notification.web.dto.NotificationRequest;
 import com.parkease.notification.web.dto.NotificationResponse;
+import com.resend.Resend;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -30,8 +28,8 @@ class NotificationServiceImplTest {
 
     @Mock
     private NotificationRepository notificationRepository;
-    @Mock
-    private JavaMailSender mailSender;
+    @Mock(answer = Answers.RETURNS_DEEP_STUBS)
+    private Resend resend;
 
     @InjectMocks
     private NotificationServiceImpl notificationService;
@@ -198,18 +196,18 @@ class NotificationServiceImplTest {
         boolean result = notificationService.sendEmail("to@test.com", "Subject", "Body");
 
         assertThat(result).isFalse();
-        verifyNoInteractions(mailSender);
+        verifyNoInteractions(resend);
     }
 
     @Test
-    void sendEmail_ShouldSendAndReturnTrue_WhenMailEnabled() {
+    void sendEmail_ShouldSendAndReturnTrue_WhenMailEnabled() throws Exception {
         ReflectionTestUtils.setField(notificationService, "mailEnabled", true);
-        ReflectionTestUtils.setField(notificationService, "mailFrom", "from@test.com");
+        ReflectionTestUtils.setField(notificationService, "mailFrom", "ParkEase <from@test.com>");
 
         boolean result = notificationService.sendEmail("to@test.com", "Subject", "Body");
 
         assertThat(result).isTrue();
-        verify(mailSender).send(any(SimpleMailMessage.class));
+        verify(resend.emails()).send(any());
     }
 
     @Test
