@@ -99,6 +99,8 @@ services:
         sync: false
       - key: FRONTEND_URL
         value: "https://parkease-frontend-zeta.vercel.app"
+      - key: ADMIN_EMAIL
+        value: "pandeyvaidik04@gmail.com"
       - key: EUREKA_CLIENT_ENABLED
         value: "false"
 

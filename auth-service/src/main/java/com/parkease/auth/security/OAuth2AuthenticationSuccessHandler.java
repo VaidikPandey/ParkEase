@@ -28,6 +28,9 @@ public class OAuth2AuthenticationSuccessHandler
     @Value("${FRONTEND_URL:http://localhost:4200}")
     private String frontendUrl;
 
+    @Value("${ADMIN_EMAIL:pandeyvaidik04@gmail.com}")
+    private String adminEmail;
+
     @Override
     public void onAuthenticationSuccess(
             HttpServletRequest request,
@@ -42,7 +45,7 @@ public class OAuth2AuthenticationSuccessHandler
         String picUrl   = oAuth2User.getAttribute("picture");
         String googleId = oAuth2User.getAttribute("sub");
 
-        final boolean isAdminEmail = "pandeyvaidik04@gmail.com".equals(email);
+        final boolean isAdminEmail = adminEmail.equalsIgnoreCase(email);
 
         boolean[] isNew = { false };
         User user = userRepository
