@@ -51,7 +51,7 @@ services:
         value: prod
       - fromGroup: parkease-jwt
       - key: AUTH_SERVICE_URL
-        sync: false
+        value: "https://parkease-auth-by3o.onrender.com"
       - key: PARKING_SERVICE_URL
         sync: false
       - key: BOOKING_SERVICE_URL
@@ -63,7 +63,7 @@ services:
       - key: ANALYTICS_SERVICE_URL
         sync: false
       - key: CORS_ALLOWED_ORIGIN
-        sync: false
+        value: "https://parkease-frontend-zeta.vercel.app"
 
   # ── Auth Service ───────────────────────────────────────────────────────────
   - type: web
