@@ -47,6 +47,9 @@ booking:
   grace-period-minutes: 15     # minutes after booking start to auto-cancel if no check-in
   cancellation-window-minutes: 30  # minutes before booking start to allow free cancellation
 
+gateway:
+  url: ${GATEWAY_URL:http://localhost:8080}
+
 eureka:
   client:
     service-url:

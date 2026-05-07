@@ -54,6 +54,9 @@ mail:
   enabled: ${MAIL_ENABLED:true}
   from: ${MAIL_FROM:pandeyvaidik04@gmail.com}
 
+gateway:
+  url: ${GATEWAY_URL:http://localhost:8080}
+
 eureka:
   client:
     service-url:

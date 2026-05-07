@@ -103,6 +103,8 @@ services:
         value: "pandeyvaidik04@gmail.com"
       - key: EUREKA_CLIENT_ENABLED
         value: "false"
+      - key: GATEWAY_URL
+        sync: false
 
   # ── Parking Service ────────────────────────────────────────────────────────
   - type: web
@@ -131,6 +133,8 @@ services:
       - fromGroup: parkease-rabbitmq
       - key: EUREKA_CLIENT_ENABLED
         value: "false"
+      - key: GATEWAY_URL
+        sync: false
 
   # ── Booking Service ────────────────────────────────────────────────────────
   - type: web
@@ -159,6 +163,8 @@ services:
       - fromGroup: parkease-rabbitmq
       - key: EUREKA_CLIENT_ENABLED
         value: "false"
+      - key: GATEWAY_URL
+        sync: false
 
   # ── Payment Service ────────────────────────────────────────────────────────
   - type: web
@@ -190,6 +196,8 @@ services:
         sync: false
       - key: EUREKA_CLIENT_ENABLED
         value: "false"
+      - key: GATEWAY_URL
+        sync: false
 
   # ── Notification Service ───────────────────────────────────────────────────
   - type: web
@@ -225,6 +233,8 @@ services:
         value: "true"
       - key: EUREKA_CLIENT_ENABLED
         value: "false"
+      - key: GATEWAY_URL
+        sync: false
 
   # ── Analytics Service ──────────────────────────────────────────────────────
   - type: web
@@ -254,3 +264,5 @@ services:
         sync: false
       - key: EUREKA_CLIENT_ENABLED
         value: "false"
+      - key: GATEWAY_URL
+        sync: false

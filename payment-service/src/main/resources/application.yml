@@ -63,3 +63,6 @@ springdoc:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+gateway:
+  url: ${GATEWAY_URL:http://localhost:8080}

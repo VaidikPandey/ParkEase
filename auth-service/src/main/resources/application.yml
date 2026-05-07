@@ -64,6 +64,9 @@ springdoc:
     path: /swagger-ui.html
     tags-sorter: alpha
 
+gateway:
+  url: ${GATEWAY_URL:http://localhost:8080}
+
 management:
   endpoints:
     web:

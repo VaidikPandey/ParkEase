@@ -39,8 +39,7 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
             "/api/v1/parking/admin/",
             "/api/v1/bookings/admin/",
             "/api/v1/payments/admin/",
-            "/api/v1/notifications/admin/",
-            "/api/v1/analytics/"
+            "/api/v1/notifications/admin/"
     );
 
     @Override
