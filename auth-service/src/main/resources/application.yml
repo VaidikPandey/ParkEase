@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: ${PORT:8081}
 
 spring:
   application:
@@ -13,16 +13,21 @@ spring:
     password: ${POSTGRES_PASSWORD:postgres}
     hikari:
       maximum-pool-size: 5
-      minimum-idle: 2
+      minimum-idle: 0
       connection-timeout: 20000
+      initialization-fail-timeout: -1
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:none}
     show-sql: false
     properties:
       hibernate:
         format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        temp:
+          use_jdbc_metadata_defaults: false
+    open-in-view: false
 
   data:
     redis:
