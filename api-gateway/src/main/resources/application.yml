@@ -8,7 +8,7 @@ spring:
     gateway:
       httpclient:
         connect-timeout: 60000
-        response-timeout: 90s
+        response-timeout: 300s
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
       globalcors:
