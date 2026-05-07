@@ -8,4 +8,4 @@ RUN mvn package -DskipTests -q
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-ENTRYPOINT ["sh", "-c", "java -Xmx160m -Xms48m -Dserver.port=${PORT:-8080} -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "java -Xmx280m -Xms64m -Dserver.port=${PORT:-8080} -jar app.jar"]
